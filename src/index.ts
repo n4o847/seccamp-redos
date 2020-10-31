@@ -118,6 +118,40 @@ function construct_(node: rerejs.Node): NFA {
   }
 }
 
+function toDOT(nfa: NFA): string {
+  interface Edge {
+    src: string;
+    dst: string;
+    label: string;
+  }
+
+  let _id = 0;
+  const id = () => _id++;
+  const stateToId = new Map<State, number>();
+  const transitions: Edge[] = [];
+  for (const state of nfa.states) {
+    if (!stateToId.has(state)) {
+      stateToId.set(state, id());
+    }
+  }
+  for (const state of nfa.states) {
+    for (const d of state.transitions) {
+      transitions.push({
+        src: `q${stateToId.get(state)}`,
+        dst: `q${stateToId.get(d.destination)}`,
+        label: d.char === null ? 'ε' : d.char.raw,
+      });
+    }
+  }
+  let out = '';
+  out += `digraph G {\n`;
+  for (const e of transitions.values()) {
+    out += `\t${e.src} -> ${e.dst} [label = "${e.label}"];\n`;
+  }
+  out += `}\n`;
+  return out;
+}
+
 function main() {
   const sources = [
     'a',
@@ -128,7 +162,8 @@ function main() {
   for (const src of sources) {
     const pat = new rerejs.Parser(src).parse();
     const res = construct(pat);
-    console.log(src, res);
+    console.log(src);
+    console.log(toDOT(res));
   }
 }
 
