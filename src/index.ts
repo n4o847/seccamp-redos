@@ -1,4 +1,3 @@
-import { stat } from 'fs';
 import * as rerejs from 'rerejs';
 
 interface NFA {
@@ -12,7 +11,7 @@ interface State {
 }
 
 interface Transition {
-  char: rerejs.Char | null;
+  char: string | null;
   destination: State;
 }
 
@@ -22,9 +21,12 @@ function construct(pattern: rerejs.Pattern): NFA {
 
 function construct_(node: rerejs.Node): NFA {
   switch (node.type) {
-    case 'Char': {
+    case 'Char':
+    case 'EscapeClass':
+    case 'Dot': {
+      const char = node.type === 'Dot' ? 'Σ' : rerejs.nodeToString(node);
       const q1: State = { transitions: [] };
-      const d0: Transition = { char: node, destination: q1 };
+      const d0: Transition = { char, destination: q1 };
       const q0: State = { transitions: [d0] };
       return {
         states: [q0, q1],
@@ -144,7 +146,7 @@ function toDOT(nfa: NFA): string {
       transitions.push({
         src: stateToId.get(state),
         dst: stateToId.get(d.destination),
-        label: d.char === null ? 'ε' : d.char.raw,
+        label: d.char === null ? 'ε' : d.char,
       });
     }
   }
@@ -154,7 +156,7 @@ function toDOT(nfa: NFA): string {
     out += `    ${stateToId.get(f)} [shape=doublecircle];\n`;
   }
   for (const e of transitions.values()) {
-    out += `    ${e.src} -> ${e.dst} [label = "${e.label}"];\n`;
+    out += `    ${e.src} -> ${e.dst} [label = ${JSON.stringify(e.label)}];\n`;
   }
   out += `}\n`;
   return out;
@@ -162,11 +164,15 @@ function toDOT(nfa: NFA): string {
 
 function main() {
   const sources = [
-    'a',
-    'a|b',
-    'ab',
-    'a*',
-    '(?:a|bc)*',
+    String.raw`a`,
+    String.raw`\s`,
+    String.raw`a|b`,
+    String.raw`ab`,
+    String.raw`a*`,
+    String.raw`(?:a|bc)`,
+    String.raw`(a*)*`,
+    String.raw`(\w|\d)*`,
+    String.raw`(.*)="(.*)"`,
   ];
   for (const src of sources) {
     console.log(src);
