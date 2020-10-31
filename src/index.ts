@@ -115,6 +115,11 @@ function construct_(node: rerejs.Node): NFA {
         acceptingStates: [f0],
       };
     }
+    case 'Capture':
+    case 'NamedCapture':
+    case 'Group': {
+      return construct_(node.child);
+    }
   }
 }
 
@@ -158,11 +163,12 @@ function main() {
     'a|b',
     'ab',
     'a*',
+    '(?:a|bc)*',
   ];
   for (const src of sources) {
+    console.log(src);
     const pat = new rerejs.Parser(src).parse();
     const res = construct(pat);
-    console.log(src);
     console.log(toDOT(res));
   }
 }
