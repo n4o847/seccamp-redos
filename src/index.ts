@@ -69,8 +69,8 @@ function construct_(node: rerejs.Node): NFA {
     case 'Sequence': {
       const nfas = node.children.map((child) => construct_(child));
       for (let i = 0; i < nfas.length - 1; i++) {
-        const nfa0 = nfas[0];
-        const nfa1 = nfas[1];
+        const nfa0 = nfas[i];
+        const nfa1 = nfas[i + 1];
         for (const f0 of nfa0.acceptingStates) {
           f0.transitions.push(...nfa1.initialState.transitions);
         }
@@ -173,6 +173,7 @@ function main() {
     String.raw`(a*)*`,
     String.raw`(\w|\d)*`,
     String.raw`(.*)="(.*)"`,
+    String.raw`abc`,
   ];
   for (const src of sources) {
     console.log(src);
