@@ -3,7 +3,7 @@ import * as rerejs from 'rerejs';
 
 interface NFA {
   states: State[];
-  initialStates: State[];
+  initialState: State;
   acceptingStates: State[];
 }
 
@@ -28,7 +28,7 @@ function construct_(node: rerejs.Node): NFA {
       const q0: State = { transitions: [d0] };
       return {
         states: [q0, q1],
-        initialStates: [q0],
+        initialState: q0,
         acceptingStates: [q1],
       };
     }
@@ -39,7 +39,7 @@ function construct_(node: rerejs.Node): NFA {
       node.children.map((child) => {
         const nfa = construct_(child);
         childStates.push(...nfa.states);
-        childInitialStates.push(...nfa.initialStates);
+        childInitialStates.push(nfa.initialState);
         childAcceptingStates.push(...nfa.acceptingStates);
       });
       const q1: State = { transitions: [] };
@@ -60,8 +60,33 @@ function construct_(node: rerejs.Node): NFA {
       const q0: State = { transitions: [...ds0] };
       return {
         states: [q0, ...childStates, q1],
-        initialStates: [q0],
+        initialState: q0,
         acceptingStates: [q1],
+      };
+    }
+    case 'Sequence': {
+      const nfas = node.children.map((child) => construct_(child));
+      for (let i = 0; i < nfas.length - 1; i++) {
+        const nfa0 = nfas[0];
+        const nfa1 = nfas[1];
+        for (const f0 of nfa0.acceptingStates) {
+          f0.transitions.push(...nfa1.initialState.transitions);
+        }
+      }
+      const q0 = nfas[0].initialState;
+      const childStates: State[] = [];
+      for (const nfa of nfas) {
+        for (const s of nfa.states) {
+          if (s === q0 || s !== nfa.initialState) {
+            childStates.push(s);
+          }
+        }
+      }
+      const fs = nfas[nfas.length - 1].acceptingStates;
+      return {
+        states: childStates,
+        initialState: q0,
+        acceptingStates: fs,
       };
     }
   }
@@ -71,6 +96,7 @@ function main() {
   const sources = [
     'a',
     'a|b',
+    'ab',
   ];
   for (const src of sources) {
     const pat = new rerejs.Parser(src).parse();
