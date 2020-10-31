@@ -1,0 +1,14 @@
+{
+  "name": "thompson",
+  "private": true,
+  "scripts": {
+    "start": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "rerejs": "^0.2.0"
+  },
+  "devDependencies": {
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.5"
+  }
+}
