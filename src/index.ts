@@ -23,6 +23,7 @@ function construct_(node: rerejs.Node): NFA {
   switch (node.type) {
     case 'Char':
     case 'EscapeClass':
+    case 'Class':
     case 'Dot': {
       const char = node.type === 'Dot' ? 'Σ' : rerejs.nodeToString(node);
       const q1: State = { transitions: [] };
@@ -173,7 +174,7 @@ function main() {
     String.raw`(a*)*`,
     String.raw`(\w|\d)*`,
     String.raw`(.*)="(.*)"`,
-    String.raw`abc`,
+    String.raw`[a-z][0-9a-z]*`,
   ];
   for (const src of sources) {
     console.log(src);
