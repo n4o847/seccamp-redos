@@ -11,7 +11,7 @@ interface State {
 }
 
 interface Transition {
-  char: string | null;
+  char: rerejs.Char | rerejs.EscapeClass | rerejs.Class | rerejs.Dot | null;
   destination: State;
 }
 
@@ -25,9 +25,8 @@ function construct_(node: rerejs.Node): NFA {
     case 'EscapeClass':
     case 'Class':
     case 'Dot': {
-      const char = node.type === 'Dot' ? 'Σ' : rerejs.nodeToString(node);
       const q1: State = { transitions: [] };
-      const d0: Transition = { char, destination: q1 };
+      const d0: Transition = { char: node, destination: q1 };
       const q0: State = { transitions: [d0] };
       return {
         states: [q0, q1],
@@ -147,7 +146,9 @@ function toDOT(nfa: NFA): string {
       transitions.push({
         src: stateToId.get(state),
         dst: stateToId.get(d.destination),
-        label: d.char === null ? 'ε' : d.char,
+        label: d.char === null ? 'ε' :
+               d.char.type === 'Dot' ? 'Σ' :
+               rerejs.nodeToString(d.char),
       });
     }
   }
