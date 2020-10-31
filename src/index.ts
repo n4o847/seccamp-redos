@@ -131,8 +131,8 @@ function toDOT(nfa: NFA): string {
   }
 
   let _id = 0;
-  const id = () => _id++;
-  const stateToId = new Map<State, number>();
+  const id = () => `q${_id++}`;
+  const stateToId = new Map<State, string>();
   const transitions: Edge[] = [];
   for (const state of nfa.states) {
     if (!stateToId.has(state)) {
@@ -142,16 +142,19 @@ function toDOT(nfa: NFA): string {
   for (const state of nfa.states) {
     for (const d of state.transitions) {
       transitions.push({
-        src: `q${stateToId.get(state)}`,
-        dst: `q${stateToId.get(d.destination)}`,
+        src: stateToId.get(state),
+        dst: stateToId.get(d.destination),
         label: d.char === null ? 'ε' : d.char.raw,
       });
     }
   }
   let out = '';
   out += `digraph G {\n`;
+  for (const f of nfa.acceptingStates) {
+    out += `    ${stateToId.get(f)} [shape=doublecircle];\n`;
+  }
   for (const e of transitions.values()) {
-    out += `\t${e.src} -> ${e.dst} [label = "${e.label}"];\n`;
+    out += `    ${e.src} -> ${e.dst} [label = "${e.label}"];\n`;
   }
   out += `}\n`;
   return out;
