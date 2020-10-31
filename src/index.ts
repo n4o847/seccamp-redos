@@ -1,4 +1,5 @@
 import * as rerejs from 'rerejs';
+import { isProperSuperset, assignUnion } from './util';
 
 interface NFA {
   states: State[];
@@ -123,6 +124,22 @@ function construct_(node: rerejs.Node): NFA {
       return construct_(node.child);
     }
   }
+}
+
+function expand(states: Set<State>, delta: Set<Transition>): Set<State> {
+  let modified = true;
+  while (modified) {
+    modified = false;
+    for (const q of states) {
+      const epsilonDestinations =
+        new Set(Array.from(delta).filter((d) => d.char === null).map((d) => d.destination));
+      if (!isProperSuperset(states, epsilonDestinations)) {
+        assignUnion(states, epsilonDestinations);
+        modified = true;
+      }
+    }
+  }
+  return states;
 }
 
 function toDOT(nfa: NFA): string {
