@@ -89,6 +89,32 @@ function construct_(node: rerejs.Node): NFA {
         acceptingStates: fs,
       };
     }
+    case 'Many': {
+      const childNFA = construct_(node.child);
+      const f0: State = { transitions: [] };
+      const d3: Transition = { char: null, destination: f0 };
+      const d2: Transition = { char: null, destination: f0 };
+      const d1: Transition = {
+        char: null,
+        destination: childNFA.initialState,
+      };
+      childNFA.acceptingStates.map((f0) => {
+        f0.transitions.push(d1);
+        f0.transitions.push(d2);
+      });
+      const d0: Transition = {
+        char: null,
+        destination: childNFA.initialState,
+      }
+      const q0: State = {
+        transitions: [d0, d3],
+      };
+      return {
+        states: [q0, ...childNFA.states, f0],
+        initialState: q0,
+        acceptingStates: [f0],
+      };
+    }
   }
 }
 
@@ -97,6 +123,7 @@ function main() {
     'a',
     'a|b',
     'ab',
+    'a*',
   ];
   for (const src of sources) {
     const pat = new rerejs.Parser(src).parse();
