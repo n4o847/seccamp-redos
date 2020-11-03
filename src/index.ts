@@ -118,6 +118,9 @@ function construct_(node: rerejs.Node): NFA {
     case 'Group': {
       return construct_(node.child);
     }
+    default: {
+      throw new Error('Unimplemented!');
+    }
   }
 }
 
@@ -156,8 +159,8 @@ function toDOT(nfa: NFA): string {
   for (const state of nfa.states) {
     for (const d of state.transitions) {
       transitions.push({
-        src: stateToId.get(state),
-        dst: stateToId.get(d.destination),
+        src: stateToId.get(state)!,
+        dst: stateToId.get(d.destination)!,
         label: d.char === null ? 'ε' :
                d.char.type === 'Dot' ? 'Σ' :
                rerejs.nodeToString(d.char),

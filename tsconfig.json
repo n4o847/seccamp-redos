@@ -3,6 +3,7 @@
     "target": "es2019",
     "module": "commonjs",
     "downlevelIteration": true,
+    "strict": true,
     "moduleResolution": "node"
   }
 }
