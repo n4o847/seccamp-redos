@@ -36,15 +36,10 @@ function construct_(node: rerejs.Node): NFA {
       };
     }
     case 'Disjunction': {
-      const childStates: State[] = [];
-      const childInitialStates: State[] = [];
-      const childAcceptingStates: State[] = [];
-      node.children.map((child) => {
-        const nfa = construct_(child);
-        childStates.push(...nfa.states);
-        childInitialStates.push(nfa.initialState);
-        childAcceptingStates.push(...nfa.acceptingStates);
-      });
+      const childNFAs = node.children.map((child) => construct_(child));
+      const childStates = childNFAs.flatMap((nfa) => nfa.states);
+      const childInitialStates = childNFAs.map((nfa) => nfa.initialState);
+      const childAcceptingStates = childNFAs.flatMap((nfa) => nfa.acceptingStates);
       const q1: State = { transitions: [] };
       const ds1: Transition[] = childAcceptingStates.map((state) => {
         const d1 = {
