@@ -26,13 +26,13 @@ function construct_(node: rerejs.Node): NFA {
     case 'EscapeClass':
     case 'Class':
     case 'Dot': {
-      const q1: State = { transitions: [] };
-      const d0: Transition = { char: node, destination: q1 };
+      const f0: State = { transitions: [] };
+      const d0: Transition = { char: node, destination: f0 };
       const q0: State = { transitions: [d0] };
       return {
-        states: [q0, q1],
+        states: [q0, f0],
         initialState: q0,
-        acceptingStates: [q1],
+        acceptingStates: [f0],
       };
     }
     case 'Disjunction': {
@@ -40,11 +40,11 @@ function construct_(node: rerejs.Node): NFA {
       const childStates = childNFAs.flatMap((nfa) => nfa.states);
       const childInitialStates = childNFAs.map((nfa) => nfa.initialState);
       const childAcceptingStates = childNFAs.flatMap((nfa) => nfa.acceptingStates);
-      const q1: State = { transitions: [] };
+      const f0: State = { transitions: [] };
       const ds1: Transition[] = childAcceptingStates.map((state) => {
         const d1 = {
           char: null,
-          destination: q1,
+          destination: f0,
         };
         state.transitions.push(d1);
         return d1;
@@ -57,30 +57,30 @@ function construct_(node: rerejs.Node): NFA {
       });
       const q0: State = { transitions: [...ds0] };
       return {
-        states: [q0, ...childStates, q1],
+        states: [q0, ...childStates, f0],
         initialState: q0,
-        acceptingStates: [q1],
+        acceptingStates: [f0],
       };
     }
     case 'Sequence': {
-      const nfas = node.children.map((child) => construct_(child));
-      for (let i = 0; i < nfas.length - 1; i++) {
-        const nfa0 = nfas[i];
-        const nfa1 = nfas[i + 1];
+      const childNFAs = node.children.map((child) => construct_(child));
+      for (let i = 0; i < childNFAs.length - 1; i++) {
+        const nfa0 = childNFAs[i];
+        const nfa1 = childNFAs[i + 1];
         for (const f0 of nfa0.acceptingStates) {
           f0.transitions.push(...nfa1.initialState.transitions);
         }
       }
-      const q0 = nfas[0].initialState;
+      const q0 = childNFAs[0].initialState;
       const childStates: State[] = [];
-      for (const nfa of nfas) {
+      for (const nfa of childNFAs) {
         for (const s of nfa.states) {
           if (s === q0 || s !== nfa.initialState) {
             childStates.push(s);
           }
         }
       }
-      const fs = nfas[nfas.length - 1].acceptingStates;
+      const fs = childNFAs[childNFAs.length - 1].acceptingStates;
       return {
         states: childStates,
         initialState: q0,
