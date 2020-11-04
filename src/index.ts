@@ -127,26 +127,29 @@ function eliminateEpsilonTransitions(nfa: NFA) {
   let modified = true;
   while (modified) {
     modified = false;
+    const toEliminate = new Set<Transition>();
     for (const q0 of nfa.states) {
       const q0Transitions: Transition[] = [];
       for (const d0 of q0.transitions) {
         q0Transitions.push(d0);
         const q1 = d0.destination;
-        const q1Transitions: Transition[] = [];
         for (const d1 of q1.transitions) {
           if (d1.char === null) {
-            q0Transitions.push({
-              char: d0.char,
-              destination: d1.destination,
-            });
-            modified = true;
-          } else {
-            q1Transitions.push(d1);
+            if (!q0.transitions.find(({ char, destination }) => char === d0.char && destination === d1.destination)) {
+              q0Transitions.push({
+                char: d0.char,
+                destination: d1.destination,
+              });
+              modified = true;
+            }
+            toEliminate.add(d1);
           }
         }
-        q1.transitions = q1Transitions;
       }
       q0.transitions = q0Transitions;
+    }
+    for (const q0 of nfa.states) {
+      q0.transitions = q0.transitions.filter((d0) => !toEliminate.has(d0));
     }
   }
 }
