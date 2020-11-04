@@ -1,5 +1,4 @@
 import * as rerejs from 'rerejs';
-import { isProperSuperset, assignUnion } from './util';
 
 interface NFA {
   states: State[];
@@ -124,20 +123,32 @@ function construct_(node: rerejs.Node): NFA {
   }
 }
 
-function expand(states: Set<State>, delta: Set<Transition>): Set<State> {
+function eliminateEpsilonTransitions(nfa: NFA) {
   let modified = true;
   while (modified) {
     modified = false;
-    for (const q of states) {
-      const epsilonDestinations =
-        new Set(Array.from(delta).filter((d) => d.char === null).map((d) => d.destination));
-      if (!isProperSuperset(states, epsilonDestinations)) {
-        assignUnion(states, epsilonDestinations);
-        modified = true;
+    for (const q0 of nfa.states) {
+      const q0Transitions: Transition[] = [];
+      for (const d0 of q0.transitions) {
+        q0Transitions.push(d0);
+        const q1 = d0.destination;
+        const q1Transitions: Transition[] = [];
+        for (const d1 of q1.transitions) {
+          if (d1.char === null) {
+            q0Transitions.push({
+              char: d0.char,
+              destination: d1.destination,
+            });
+            modified = true;
+          } else {
+            q1Transitions.push(d1);
+          }
+        }
+        q1.transitions = q1Transitions;
       }
+      q0.transitions = q0Transitions;
     }
   }
-  return states;
 }
 
 function toDOT(nfa: NFA): string {
@@ -196,6 +207,8 @@ function main() {
     console.log(src);
     const pat = new rerejs.Parser(src).parse();
     const res = construct(pat);
+    console.log(toDOT(res));
+    eliminateEpsilonTransitions(res);
     console.log(toDOT(res));
   }
 }
