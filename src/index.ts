@@ -95,20 +95,13 @@ class NFABuilder {
           };
         } else {
           const childNFAs = node.children.map((child) => this.buildChild(child));
+          const childStates = childNFAs.flatMap((nfa) => nfa.states);
           for (let i = 0; i < childNFAs.length - 1; i++) {
-            const nfa0 = childNFAs[i];
-            const nfa1 = childNFAs[i + 1];
-            nfa0.acceptingState.transitions.push(...nfa1.initialState.transitions);
+            const fs = childNFAs[i].acceptingState;
+            const qt = childNFAs[i + 1].initialState;
+            fs.transitions.push({ char: null, destination: qt });
           }
           const q0 = childNFAs[0].initialState;
-          const childStates: State[] = [];
-          for (const nfa of childNFAs) {
-            for (const s of nfa.states) {
-              if (s === q0 || s !== nfa.initialState) {
-                childStates.push(s);
-              }
-            }
-          }
           const f0 = childNFAs[childNFAs.length - 1].acceptingState;
           return {
             normalized: true,
