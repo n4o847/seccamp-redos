@@ -1,10 +1,22 @@
 import * as rerejs from 'rerejs';
 
-interface NFA {
+type NFA =
+  | NormalizedNFA
+  | NonNormalizedNFA;
+
+type NormalizedNFA = {
+  normalized: true;
   states: State[];
   initialState: State;
+  acceptingState: State;
+};
+
+type NonNormalizedNFA = {
+  normalized: false;
+  states: State[];
+  initialStates: State[];
   acceptingStates: State[];
-}
+};
 
 interface State {
   transitions: Transition[];
@@ -15,11 +27,11 @@ interface Transition {
   destination: State;
 }
 
-function construct(pattern: rerejs.Pattern): NFA {
+function construct(pattern: rerejs.Pattern): NormalizedNFA {
   return construct_(pattern.child);
 }
 
-function construct_(node: rerejs.Node): NFA {
+function construct_(node: rerejs.Node): NormalizedNFA {
   switch (node.type) {
     case 'Char':
     case 'EscapeClass':
@@ -29,16 +41,17 @@ function construct_(node: rerejs.Node): NFA {
       const d0: Transition = { char: node, destination: f0 };
       const q0: State = { transitions: [d0] };
       return {
+        normalized: true,
         states: [q0, f0],
         initialState: q0,
-        acceptingStates: [f0],
+        acceptingState: f0,
       };
     }
     case 'Disjunction': {
       const childNFAs = node.children.map((child) => construct_(child));
       const childStates = childNFAs.flatMap((nfa) => nfa.states);
       const childInitialStates = childNFAs.map((nfa) => nfa.initialState);
-      const childAcceptingStates = childNFAs.flatMap((nfa) => nfa.acceptingStates);
+      const childAcceptingStates = childNFAs.map((nfa) => nfa.acceptingState);
       const f0: State = { transitions: [] };
       const ds1: Transition[] = childAcceptingStates.map((state) => {
         const d1 = {
@@ -56,9 +69,10 @@ function construct_(node: rerejs.Node): NFA {
       });
       const q0: State = { transitions: [...ds0] };
       return {
+        normalized: true,
         states: [q0, ...childStates, f0],
         initialState: q0,
-        acceptingStates: [f0],
+        acceptingState: f0,
       };
     }
     case 'Sequence': {
@@ -67,18 +81,17 @@ function construct_(node: rerejs.Node): NFA {
         const d0: Transition = { char: null, destination: f0 };
         const q0: State = { transitions: [d0] };
         return {
+          normalized: true,
           states: [q0, f0],
           initialState: q0,
-          acceptingStates: [f0],
+          acceptingState: f0,
         };
       } else {
         const childNFAs = node.children.map((child) => construct_(child));
         for (let i = 0; i < childNFAs.length - 1; i++) {
           const nfa0 = childNFAs[i];
           const nfa1 = childNFAs[i + 1];
-          for (const f0 of nfa0.acceptingStates) {
-            f0.transitions.push(...nfa1.initialState.transitions);
-          }
+          nfa0.acceptingState.transitions.push(...nfa1.initialState.transitions);
         }
         const q0 = childNFAs[0].initialState;
         const childStates: State[] = [];
@@ -89,11 +102,12 @@ function construct_(node: rerejs.Node): NFA {
             }
           }
         }
-        const fs = childNFAs[childNFAs.length - 1].acceptingStates;
+        const f0 = childNFAs[childNFAs.length - 1].acceptingState;
         return {
+          normalized: true,
           states: childStates,
           initialState: q0,
-          acceptingStates: fs,
+          acceptingState: f0,
         };
       }
     }
@@ -106,10 +120,7 @@ function construct_(node: rerejs.Node): NFA {
         char: null,
         destination: childNFA.initialState,
       };
-      childNFA.acceptingStates.map((f0) => {
-        f0.transitions.push(d1);
-        f0.transitions.push(d2);
-      });
+      childNFA.acceptingState.transitions.push(d1, d2);
       const d0: Transition = {
         char: null,
         destination: childNFA.initialState,
@@ -118,9 +129,10 @@ function construct_(node: rerejs.Node): NFA {
         transitions: node.nonGreedy ? [d3, d0] : [d0, d3],
       };
       return {
+        normalized: true,
         states: [q0, ...childNFA.states, f0],
         initialState: q0,
-        acceptingStates: [f0],
+        acceptingState: f0,
       };
     }
     case 'Capture':
@@ -134,7 +146,7 @@ function construct_(node: rerejs.Node): NFA {
   }
 }
 
-function eliminateEpsilonTransitions(nfa: NFA) {
+function eliminateEpsilonTransitions(nfa: NormalizedNFA) {
   let modified = true;
   while (modified) {
     modified = false;
@@ -194,7 +206,8 @@ function toDOT(nfa: NFA): string {
   }
   let out = '';
   out += `digraph G {\n`;
-  for (const f of nfa.acceptingStates) {
+  const acceptingStates = nfa.normalized ? [nfa.acceptingState] : nfa.acceptingStates;
+  for (const f of acceptingStates) {
     out += `    ${stateToId.get(f)} [shape=doublecircle];\n`;
   }
   for (const e of transitions.values()) {
