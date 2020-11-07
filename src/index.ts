@@ -15,7 +15,7 @@ type NonNormalizedNFA = {
   normalized: false;
   states: State[];
   initialStates: State[];
-  acceptingStates: State[];
+  acceptingStates: Set<State>;
 };
 
 interface State {
@@ -146,7 +146,9 @@ function construct_(node: rerejs.Node): NormalizedNFA {
   }
 }
 
-function eliminateEpsilonTransitions(nfa: NormalizedNFA) {
+function eliminateEpsilonTransitions(nfa: NormalizedNFA): NonNormalizedNFA {
+  const acceptingStates = new Set<State>();
+  acceptingStates.add(nfa.acceptingState);
   let modified = true;
   while (modified) {
     modified = false;
@@ -166,6 +168,9 @@ function eliminateEpsilonTransitions(nfa: NormalizedNFA) {
               modified = true;
             }
             toEliminate.add(d1);
+            if (acceptingStates.has(d1.destination)) {
+              acceptingStates.add(q1);
+            }
           }
         }
       }
@@ -175,6 +180,12 @@ function eliminateEpsilonTransitions(nfa: NormalizedNFA) {
       q0.transitions = q0.transitions.filter((d0) => !toEliminate.has(d0));
     }
   }
+  return {
+    normalized: false,
+    states: nfa.states,
+    initialStates: [nfa.initialState],
+    acceptingStates,
+  };
 }
 
 function toDOT(nfa: NFA): string {
@@ -206,7 +217,7 @@ function toDOT(nfa: NFA): string {
   }
   let out = '';
   out += `digraph G {\n`;
-  const acceptingStates = nfa.normalized ? [nfa.acceptingState] : nfa.acceptingStates;
+  const acceptingStates = nfa.normalized ? new Set([nfa.acceptingState]) : nfa.acceptingStates;
   for (const f of acceptingStates) {
     out += `    ${stateToId.get(f)} [shape=doublecircle];\n`;
   }
@@ -235,10 +246,10 @@ function main() {
   for (const src of sources) {
     console.log(src);
     const pat = new rerejs.Parser(src).parse();
-    const res = construct(pat);
-    console.log(toDOT(res));
-    eliminateEpsilonTransitions(res);
-    console.log(toDOT(res));
+    const enfa = construct(pat);
+    console.log(toDOT(enfa));
+    const nfa = eliminateEpsilonTransitions(enfa);
+    console.log(toDOT(nfa));
   }
 }
 
