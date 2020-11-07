@@ -27,58 +27,23 @@ interface Transition {
   destination: State;
 }
 
-function construct(pattern: rerejs.Pattern): NormalizedNFA {
-  return construct_(pattern.child);
-}
+class NFABuilder {
+  constructor(
+    private pattern: rerejs.Pattern,
+  ) {}
 
-function construct_(node: rerejs.Node): NormalizedNFA {
-  switch (node.type) {
-    case 'Char':
-    case 'EscapeClass':
-    case 'Class':
-    case 'Dot': {
-      const f0: State = { transitions: [] };
-      const d0: Transition = { char: node, destination: f0 };
-      const q0: State = { transitions: [d0] };
-      return {
-        normalized: true,
-        states: [q0, f0],
-        initialState: q0,
-        acceptingState: f0,
-      };
-    }
-    case 'Disjunction': {
-      const childNFAs = node.children.map((child) => construct_(child));
-      const childStates = childNFAs.flatMap((nfa) => nfa.states);
-      const childInitialStates = childNFAs.map((nfa) => nfa.initialState);
-      const childAcceptingStates = childNFAs.map((nfa) => nfa.acceptingState);
-      const f0: State = { transitions: [] };
-      const ds1: Transition[] = childAcceptingStates.map((state) => {
-        const d1 = {
-          char: null,
-          destination: f0,
-        };
-        state.transitions.push(d1);
-        return d1;
-      });
-      const ds0: Transition[] = childInitialStates.map((state) => {
-        return {
-          char: null,
-          destination: state,
-        };
-      });
-      const q0: State = { transitions: [...ds0] };
-      return {
-        normalized: true,
-        states: [q0, ...childStates, f0],
-        initialState: q0,
-        acceptingState: f0,
-      };
-    }
-    case 'Sequence': {
-      if (node.children.length === 0) {
+  build(): NormalizedNFA {
+    return this.buildChild(this.pattern.child);
+  }
+
+  private buildChild(node: rerejs.Node): NormalizedNFA {
+    switch (node.type) {
+      case 'Char':
+      case 'EscapeClass':
+      case 'Class':
+      case 'Dot': {
         const f0: State = { transitions: [] };
-        const d0: Transition = { char: null, destination: f0 };
+        const d0: Transition = { char: node, destination: f0 };
         const q0: State = { transitions: [d0] };
         return {
           normalized: true,
@@ -86,62 +51,103 @@ function construct_(node: rerejs.Node): NormalizedNFA {
           initialState: q0,
           acceptingState: f0,
         };
-      } else {
-        const childNFAs = node.children.map((child) => construct_(child));
-        for (let i = 0; i < childNFAs.length - 1; i++) {
-          const nfa0 = childNFAs[i];
-          const nfa1 = childNFAs[i + 1];
-          nfa0.acceptingState.transitions.push(...nfa1.initialState.transitions);
-        }
-        const q0 = childNFAs[0].initialState;
-        const childStates: State[] = [];
-        for (const nfa of childNFAs) {
-          for (const s of nfa.states) {
-            if (s === q0 || s !== nfa.initialState) {
-              childStates.push(s);
-            }
-          }
-        }
-        const f0 = childNFAs[childNFAs.length - 1].acceptingState;
+      }
+      case 'Disjunction': {
+        const childNFAs = node.children.map((child) => this.buildChild(child));
+        const childStates = childNFAs.flatMap((nfa) => nfa.states);
+        const childInitialStates = childNFAs.map((nfa) => nfa.initialState);
+        const childAcceptingStates = childNFAs.map((nfa) => nfa.acceptingState);
+        const f0: State = { transitions: [] };
+        const ds1: Transition[] = childAcceptingStates.map((state) => {
+          const d1 = {
+            char: null,
+            destination: f0,
+          };
+          state.transitions.push(d1);
+          return d1;
+        });
+        const ds0: Transition[] = childInitialStates.map((state) => {
+          return {
+            char: null,
+            destination: state,
+          };
+        });
+        const q0: State = { transitions: [...ds0] };
         return {
           normalized: true,
-          states: childStates,
+          states: [q0, ...childStates, f0],
           initialState: q0,
           acceptingState: f0,
         };
       }
-    }
-    case 'Many': {
-      const childNFA = construct_(node.child);
-      const f0: State = { transitions: [] };
-      const d3: Transition = { char: null, destination: f0 };
-      const d2: Transition = { char: null, destination: f0 };
-      const d1: Transition = {
-        char: null,
-        destination: childNFA.initialState,
-      };
-      childNFA.acceptingState.transitions.push(d1, d2);
-      const d0: Transition = {
-        char: null,
-        destination: childNFA.initialState,
+      case 'Sequence': {
+        if (node.children.length === 0) {
+          const f0: State = { transitions: [] };
+          const d0: Transition = { char: null, destination: f0 };
+          const q0: State = { transitions: [d0] };
+          return {
+            normalized: true,
+            states: [q0, f0],
+            initialState: q0,
+            acceptingState: f0,
+          };
+        } else {
+          const childNFAs = node.children.map((child) => this.buildChild(child));
+          for (let i = 0; i < childNFAs.length - 1; i++) {
+            const nfa0 = childNFAs[i];
+            const nfa1 = childNFAs[i + 1];
+            nfa0.acceptingState.transitions.push(...nfa1.initialState.transitions);
+          }
+          const q0 = childNFAs[0].initialState;
+          const childStates: State[] = [];
+          for (const nfa of childNFAs) {
+            for (const s of nfa.states) {
+              if (s === q0 || s !== nfa.initialState) {
+                childStates.push(s);
+              }
+            }
+          }
+          const f0 = childNFAs[childNFAs.length - 1].acceptingState;
+          return {
+            normalized: true,
+            states: childStates,
+            initialState: q0,
+            acceptingState: f0,
+          };
+        }
       }
-      const q0: State = {
-        transitions: node.nonGreedy ? [d3, d0] : [d0, d3],
-      };
-      return {
-        normalized: true,
-        states: [q0, ...childNFA.states, f0],
-        initialState: q0,
-        acceptingState: f0,
-      };
-    }
-    case 'Capture':
-    case 'NamedCapture':
-    case 'Group': {
-      return construct_(node.child);
-    }
-    default: {
-      throw new Error('Unimplemented!');
+      case 'Many': {
+        const childNFA = this.buildChild(node.child);
+        const f0: State = { transitions: [] };
+        const d3: Transition = { char: null, destination: f0 };
+        const d2: Transition = { char: null, destination: f0 };
+        const d1: Transition = {
+          char: null,
+          destination: childNFA.initialState,
+        };
+        childNFA.acceptingState.transitions.push(d1, d2);
+        const d0: Transition = {
+          char: null,
+          destination: childNFA.initialState,
+        }
+        const q0: State = {
+          transitions: node.nonGreedy ? [d3, d0] : [d0, d3],
+        };
+        return {
+          normalized: true,
+          states: [q0, ...childNFA.states, f0],
+          initialState: q0,
+          acceptingState: f0,
+        };
+      }
+      case 'Capture':
+      case 'NamedCapture':
+      case 'Group': {
+        return this.buildChild(node.child);
+      }
+      default: {
+        throw new Error('Unimplemented!');
+      }
     }
   }
 }
@@ -258,7 +264,7 @@ function main() {
   for (const src of sources) {
     console.log(src);
     const pat = new rerejs.Parser(src).parse();
-    const enfa = construct(pat);
+    const enfa = new NFABuilder(pat).build();
     console.log(toDOT(enfa));
     const nfa = eliminateEpsilonTransitions(enfa);
     console.log(toDOT(nfa));
