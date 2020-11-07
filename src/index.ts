@@ -215,20 +215,12 @@ function toDOT(nfa: NFA): string {
     label: string;
   }
 
-  let _id = 0;
-  const id = () => `q${_id++}`;
-  const stateToId = new Map<State, string>();
   const transitions: Edge[] = [];
-  for (const state of nfa.states) {
-    if (!stateToId.has(state)) {
-      stateToId.set(state, id());
-    }
-  }
   for (const state of nfa.states) {
     for (const d of state.transitions) {
       transitions.push({
-        src: stateToId.get(state)!,
-        dst: stateToId.get(d.destination)!,
+        src: state.id,
+        dst: d.destination.id,
         label: d.char === null ? 'ε' :
                d.char.type === 'Dot' ? 'Σ' :
                rerejs.nodeToString(d.char),
@@ -239,13 +231,12 @@ function toDOT(nfa: NFA): string {
   out += `digraph G {\n`;
   const acceptingStates = nfa.normalized ? new Set([nfa.acceptingState]) : nfa.acceptingStates;
   for (const f of acceptingStates) {
-    out += `    ${stateToId.get(f)} [shape=doublecircle];\n`;
+    out += `    ${f.id} [shape=doublecircle];\n`;
   }
   const initialStates = nfa.normalized ? [nfa.initialState] : nfa.initialStates;
   for (const q of initialStates) {
-    const id = stateToId.get(q)!;
-    out += `    ${id}_init [shape = point];\n`;
-    out += `    ${id}_init -> ${id};\n`;
+    out += `    ${q.id}_init [shape = point];\n`;
+    out += `    ${q.id}_init -> ${q.id};\n`;
   }
   for (const e of transitions.values()) {
     out += `    ${e.src} -> ${e.dst} [label = ${JSON.stringify(e.label)}];\n`;
