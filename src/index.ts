@@ -9,6 +9,7 @@ type NormalizedNFA = {
   states: State[];
   initialState: State;
   acceptingState: State;
+  transitions: Map<State, Transition[]>;
 };
 
 type NonNormalizedNFA = {
@@ -16,11 +17,11 @@ type NonNormalizedNFA = {
   states: State[];
   initialStates: State[];
   acceptingStates: Set<State>;
+  transitions: Map<State, Transition[]>;
 };
 
 type State = {
   id: string;
-  transitions: Transition[];
 };
 
 type Transition = {
@@ -29,6 +30,8 @@ type Transition = {
 };
 
 class NFABuilder {
+  private states: State[] = [];
+  private transitions: Map<State, Transition[]> = new Map();
   private stateId = 0;
 
   constructor(
@@ -36,76 +39,75 @@ class NFABuilder {
   ) {}
 
   build(): NormalizedNFA {
+    this.states = [];
+    this.transitions = new Map();
     this.stateId = 0;
-    return this.buildChild(this.pattern.child);
+    const { initialState, acceptingState } = this.buildChild(this.pattern.child);
+    return {
+      normalized: true,
+      states: this.states,
+      initialState,
+      acceptingState,
+      transitions: this.transitions,
+    };
   }
 
-  private buildChild(node: rerejs.Node): NormalizedNFA {
+  private buildChild(node: rerejs.Node): Pick<NormalizedNFA, 'initialState' | 'acceptingState'> {
     switch (node.type) {
       case 'Char':
       case 'EscapeClass':
       case 'Class':
       case 'Dot': {
-        const q0 = this.createState({ transitions: [] });
-        const f0 = this.createState({ transitions: [] });
-        q0.transitions.push({ char: node, destination: f0 });
+        const q0 = this.createState();
+        const f0 = this.createState();
+        this.transitions.get(q0)!.push({ char: node, destination: f0 });
         return {
-          normalized: true,
-          states: [q0, f0],
           initialState: q0,
           acceptingState: f0,
         };
       }
       case 'Disjunction': {
         const childNFAs = node.children.map((child) => this.buildChild(child));
-        const childStates = childNFAs.flatMap((nfa) => nfa.states);
         const childInitialStates = childNFAs.map((nfa) => nfa.initialState);
         const childAcceptingStates = childNFAs.map((nfa) => nfa.acceptingState);
-        const q0 = this.createState({ transitions: [] });
-        const f0 = this.createState({ transitions: [] });
+        const q0 = this.createState();
+        const f0 = this.createState();
         for (const qs of childInitialStates) {
-          q0.transitions.push({
+          this.transitions.get(q0)!.push({
             char: null,
             destination: qs,
           });
         }
         for (const fs of childAcceptingStates) {
-          fs.transitions.push({
+          this.transitions.get(fs)!.push({
             char: null,
             destination: f0,
           });
         }
         return {
-          normalized: true,
-          states: [q0, ...childStates, f0],
           initialState: q0,
           acceptingState: f0,
         };
       }
       case 'Sequence': {
         if (node.children.length === 0) {
-          const q0 = this.createState({ transitions: [] });
-          const f0 = this.createState({ transitions: [] });
-          q0.transitions.push({ char: null, destination: f0 });
+          const q0 = this.createState();
+          const f0 = this.createState();
+          this.transitions.get(q0)!.push({ char: null, destination: f0 });
           return {
-            normalized: true,
-            states: [q0, f0],
             initialState: q0,
             acceptingState: f0,
           };
         } else {
           const childNFAs = node.children.map((child) => this.buildChild(child));
-          const childStates = childNFAs.flatMap((nfa) => nfa.states);
           for (let i = 0; i < childNFAs.length - 1; i++) {
             const fs = childNFAs[i].acceptingState;
             const qt = childNFAs[i + 1].initialState;
-            fs.transitions.push({ char: null, destination: qt });
+            this.transitions.get(fs)!.push({ char: null, destination: qt });
           }
           const q0 = childNFAs[0].initialState;
           const f0 = childNFAs[childNFAs.length - 1].acceptingState;
           return {
-            normalized: true,
-            states: childStates,
             initialState: q0,
             acceptingState: f0,
           };
@@ -113,8 +115,8 @@ class NFABuilder {
       }
       case 'Many': {
         const childNFA = this.buildChild(node.child);
-        const q0 = this.createState({ transitions: [] });
-        const f0 = this.createState({ transitions: [] });
+        const q0 = this.createState();
+        const f0 = this.createState();
         const d0: Transition = {
           char: null,
           destination: childNFA.initialState,
@@ -125,11 +127,9 @@ class NFABuilder {
         };
         const d2: Transition = { char: null, destination: f0 };
         const d3: Transition = { char: null, destination: f0 };
-        childNFA.acceptingState.transitions.push(d1, d2);
-        q0.transitions.push(...(node.nonGreedy ? [d3, d0] : [d0, d3]));
+        this.transitions.get(childNFA.acceptingState)!.push(d1, d2);
+        this.transitions.get(q0)!.push(...(node.nonGreedy ? [d3, d0] : [d0, d3]));
         return {
-          normalized: true,
-          states: [q0, ...childNFA.states, f0],
           initialState: q0,
           acceptingState: f0,
         };
@@ -145,28 +145,33 @@ class NFABuilder {
     }
   }
 
-  private createState(state: Omit<State, 'id'>): State {
-    return {
+  private createState(): State {
+    const state = {
       id: `q${this.stateId++}`,
-      ...state,
     };
+    this.states.push(state);
+    this.transitions.set(state, []);
+    return state;
   }
 }
 
 function eliminateEpsilonTransitions(nfa: NormalizedNFA): NonNormalizedNFA {
+  const states = nfa.states;
+  const initialStates = [nfa.initialState];
   const acceptingStates = new Set([nfa.acceptingState]);
+  const transitions = new Map(nfa.transitions);
   let modified = true;
   while (modified) {
     modified = false;
     const toEliminate = new Set<Transition>();
-    for (const q0 of nfa.states) {
+    for (const q0 of states) {
       const q0Transitions: Transition[] = [];
-      for (const d0 of q0.transitions) {
+      for (const d0 of transitions.get(q0)!) {
         q0Transitions.push(d0);
         const q1 = d0.destination;
-        for (const d1 of q1.transitions) {
+        for (const d1 of transitions.get(q1)!) {
           if (d1.char === null) {
-            if (!q0.transitions.find(({ char, destination }) => char === d0.char && destination === d1.destination)) {
+            if (!transitions.get(q0)!.find(({ char, destination }) => char === d0.char && destination === d1.destination)) {
               q0Transitions.push({
                 char: d0.char,
                 destination: d1.destination,
@@ -180,24 +185,24 @@ function eliminateEpsilonTransitions(nfa: NormalizedNFA): NonNormalizedNFA {
           }
         }
       }
-      q0.transitions = q0Transitions;
+      transitions.set(q0, q0Transitions);
     }
-    for (const q0 of nfa.states) {
-      q0.transitions = q0.transitions.filter((d0) => !toEliminate.has(d0));
+    for (const q0 of states) {
+      transitions.set(q0, transitions.get(q0)!.filter((d0) => !toEliminate.has(d0)));
     }
   }
-  const initialStates = [nfa.initialState];
-  for (const d0 of nfa.initialState.transitions) {
+  for (const d0 of transitions.get(nfa.initialState)!) {
     if (d0.char === null) {
       initialStates.push(d0.destination);
     }
   }
-  nfa.initialState.transitions = nfa.initialState.transitions.filter((d0) => d0.char !== null);
+  transitions.set(nfa.initialState, transitions.get(nfa.initialState)!.filter((d0) => d0.char !== null));
   return {
     normalized: false,
-    states: nfa.states,
+    states,
     initialStates,
     acceptingStates,
+    transitions,
   };
 }
 
@@ -209,14 +214,14 @@ function toDOT(nfa: NFA): string {
   }
 
   const transitions: Edge[] = [];
-  for (const state of nfa.states) {
-    for (const d of state.transitions) {
+  for (const [q, ds] of nfa.transitions) {
+    for (const d of ds) {
       transitions.push({
-        src: state.id,
+        src: q.id,
         dst: d.destination.id,
         label: d.char === null ? 'ε' :
-               d.char.type === 'Dot' ? 'Σ' :
-               rerejs.nodeToString(d.char),
+                d.char.type === 'Dot' ? 'Σ' :
+                rerejs.nodeToString(d.char),
       });
     }
   }
