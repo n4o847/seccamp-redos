@@ -36,6 +36,7 @@ class NFABuilder {
   ) {}
 
   build(): NormalizedNFA {
+    this.stateId = 0;
     return this.buildChild(this.pattern.child);
   }
 
@@ -45,9 +46,9 @@ class NFABuilder {
       case 'EscapeClass':
       case 'Class':
       case 'Dot': {
+        const q0 = this.createState({ transitions: [] });
         const f0 = this.createState({ transitions: [] });
-        const d0: Transition = { char: node, destination: f0 };
-        const q0 = this.createState({ transitions: [d0] });
+        q0.transitions.push({ char: node, destination: f0 });
         return {
           normalized: true,
           states: [q0, f0],
@@ -60,22 +61,20 @@ class NFABuilder {
         const childStates = childNFAs.flatMap((nfa) => nfa.states);
         const childInitialStates = childNFAs.map((nfa) => nfa.initialState);
         const childAcceptingStates = childNFAs.map((nfa) => nfa.acceptingState);
+        const q0 = this.createState({ transitions: [] });
         const f0 = this.createState({ transitions: [] });
-        const ds1: Transition[] = childAcceptingStates.map((state) => {
-          const d1 = {
+        for (const qs of childInitialStates) {
+          q0.transitions.push({
+            char: null,
+            destination: qs,
+          });
+        }
+        for (const fs of childAcceptingStates) {
+          fs.transitions.push({
             char: null,
             destination: f0,
-          };
-          state.transitions.push(d1);
-          return d1;
-        });
-        const ds0: Transition[] = childInitialStates.map((state) => {
-          return {
-            char: null,
-            destination: state,
-          };
-        });
-        const q0 = this.createState({ transitions: [...ds0] });
+          });
+        }
         return {
           normalized: true,
           states: [q0, ...childStates, f0],
@@ -85,9 +84,9 @@ class NFABuilder {
       }
       case 'Sequence': {
         if (node.children.length === 0) {
+          const q0 = this.createState({ transitions: [] });
           const f0 = this.createState({ transitions: [] });
-          const d0: Transition = { char: null, destination: f0 };
-          const q0 = this.createState({ transitions: [d0] });
+          q0.transitions.push({ char: null, destination: f0 });
           return {
             normalized: true,
             states: [q0, f0],
@@ -121,21 +120,20 @@ class NFABuilder {
       }
       case 'Many': {
         const childNFA = this.buildChild(node.child);
+        const q0 = this.createState({ transitions: [] });
         const f0 = this.createState({ transitions: [] });
-        const d3: Transition = { char: null, destination: f0 };
-        const d2: Transition = { char: null, destination: f0 };
+        const d0: Transition = {
+          char: null,
+          destination: childNFA.initialState,
+        };
         const d1: Transition = {
           char: null,
           destination: childNFA.initialState,
         };
+        const d2: Transition = { char: null, destination: f0 };
+        const d3: Transition = { char: null, destination: f0 };
         childNFA.acceptingState.transitions.push(d1, d2);
-        const d0: Transition = {
-          char: null,
-          destination: childNFA.initialState,
-        }
-        const q0 = this.createState({
-          transitions: node.nonGreedy ? [d3, d0] : [d0, d3],
-        });
+        q0.transitions.push(...(node.nonGreedy ? [d3, d0] : [d0, d3]));
         return {
           normalized: true,
           states: [q0, ...childNFA.states, f0],
