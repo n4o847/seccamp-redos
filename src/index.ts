@@ -147,8 +147,7 @@ function construct_(node: rerejs.Node): NormalizedNFA {
 }
 
 function eliminateEpsilonTransitions(nfa: NormalizedNFA): NonNormalizedNFA {
-  const acceptingStates = new Set<State>();
-  acceptingStates.add(nfa.acceptingState);
+  const acceptingStates = new Set([nfa.acceptingState]);
   let modified = true;
   while (modified) {
     modified = false;
@@ -180,10 +179,17 @@ function eliminateEpsilonTransitions(nfa: NormalizedNFA): NonNormalizedNFA {
       q0.transitions = q0.transitions.filter((d0) => !toEliminate.has(d0));
     }
   }
+  const initialStates = [nfa.initialState];
+  for (const d0 of nfa.initialState.transitions) {
+    if (d0.char === null) {
+      initialStates.push(d0.destination);
+    }
+  }
+  nfa.initialState.transitions = nfa.initialState.transitions.filter((d0) => d0.char !== null);
   return {
     normalized: false,
     states: nfa.states,
-    initialStates: [nfa.initialState],
+    initialStates,
     acceptingStates,
   };
 }
@@ -220,6 +226,12 @@ function toDOT(nfa: NFA): string {
   const acceptingStates = nfa.normalized ? new Set([nfa.acceptingState]) : nfa.acceptingStates;
   for (const f of acceptingStates) {
     out += `    ${stateToId.get(f)} [shape=doublecircle];\n`;
+  }
+  const initialStates = nfa.normalized ? [nfa.initialState] : nfa.initialStates;
+  for (const q of initialStates) {
+    const id = stateToId.get(q)!;
+    out += `    ${id}_init [shape = point];\n`;
+    out += `    ${id}_init -> ${id};\n`;
   }
   for (const e of transitions.values()) {
     out += `    ${e.src} -> ${e.dst} [label = ${JSON.stringify(e.label)}];\n`;
