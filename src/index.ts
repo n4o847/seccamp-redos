@@ -230,8 +230,8 @@ function toDOT(nfa: NFA): string {
   let out = '';
   out += `digraph G {\n`;
   const acceptingStates = nfa.normalized ? new Set([nfa.acceptingState]) : nfa.acceptingStates;
-  for (const f of acceptingStates) {
-    out += `    ${f.id} [shape=doublecircle];\n`;
+  for (const q of nfa.states) {
+    out += `    ${q.id} [shape = ${acceptingStates.has(q) ? `doublecircle` : `circle`}];\n`;
   }
   const initialStates = nfa.normalized ? [nfa.initialState] : nfa.initialStates;
   for (const q of initialStates) {
