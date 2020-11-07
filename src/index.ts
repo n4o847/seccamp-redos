@@ -104,7 +104,7 @@ function construct_(node: rerejs.Node): NFA {
         destination: childNFA.initialState,
       }
       const q0: State = {
-        transitions: [d0, d3],
+        transitions: node.nonGreedy ? [d3, d0] : [d0, d3],
       };
       return {
         states: [q0, ...childNFA.states, f0],
@@ -200,6 +200,7 @@ function main() {
     String.raw`a|b`,
     String.raw`ab`,
     String.raw`a*`,
+    String.raw`a*?`,
     String.raw`(?:a|bc)`,
     String.raw`(a*)*`,
     String.raw`(\w|\d)*`,
