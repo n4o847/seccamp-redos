@@ -24,8 +24,14 @@ type State = {
   id: string;
 };
 
+type Char =
+  | rerejs.Char
+  | rerejs.EscapeClass
+  | rerejs.Class
+  | rerejs.Dot;
+
 type Transition = {
-  char: rerejs.Char | rerejs.EscapeClass | rerejs.Class | rerejs.Dot | null;
+  char: Char | null;
   destination: State;
 };
 
@@ -60,7 +66,7 @@ class NFABuilder {
       case 'Dot': {
         const q0 = this.createState();
         const f0 = this.createState();
-        this.transitions.get(q0)!.push({ char: node, destination: f0 });
+        this.addTransition(q0, node, f0);
         return {
           initialState: q0,
           acceptingState: f0,
@@ -68,21 +74,13 @@ class NFABuilder {
       }
       case 'Disjunction': {
         const childNFAs = node.children.map((child) => this.buildChild(child));
-        const childInitialStates = childNFAs.map((nfa) => nfa.initialState);
-        const childAcceptingStates = childNFAs.map((nfa) => nfa.acceptingState);
         const q0 = this.createState();
         const f0 = this.createState();
-        for (const qs of childInitialStates) {
-          this.transitions.get(q0)!.push({
-            char: null,
-            destination: qs,
-          });
-        }
-        for (const fs of childAcceptingStates) {
-          this.transitions.get(fs)!.push({
-            char: null,
-            destination: f0,
-          });
+        for (const childNFA of childNFAs) {
+          const q1 = childNFA.initialState;
+          const f1 = childNFA.acceptingState;
+          this.addTransition(q0, null, q1);
+          this.addTransition(f1, null, f0);
         }
         return {
           initialState: q0,
@@ -93,7 +91,7 @@ class NFABuilder {
         if (node.children.length === 0) {
           const q0 = this.createState();
           const f0 = this.createState();
-          this.transitions.get(q0)!.push({ char: null, destination: f0 });
+          this.addTransition(q0, null, f0);
           return {
             initialState: q0,
             acceptingState: f0,
@@ -101,9 +99,9 @@ class NFABuilder {
         } else {
           const childNFAs = node.children.map((child) => this.buildChild(child));
           for (let i = 0; i < childNFAs.length - 1; i++) {
-            const fs = childNFAs[i].acceptingState;
-            const qt = childNFAs[i + 1].initialState;
-            this.transitions.get(fs)!.push({ char: null, destination: qt });
+            const f1 = childNFAs[i].acceptingState;
+            const q2 = childNFAs[i + 1].initialState;
+            this.addTransition(f1, null, q2);
           }
           const q0 = childNFAs[0].initialState;
           const f0 = childNFAs[childNFAs.length - 1].acceptingState;
@@ -117,18 +115,19 @@ class NFABuilder {
         const childNFA = this.buildChild(node.child);
         const q0 = this.createState();
         const f0 = this.createState();
-        const d0: Transition = {
-          char: null,
-          destination: childNFA.initialState,
-        };
-        const d1: Transition = {
-          char: null,
-          destination: childNFA.initialState,
-        };
-        const d2: Transition = { char: null, destination: f0 };
-        const d3: Transition = { char: null, destination: f0 };
-        this.transitions.get(childNFA.acceptingState)!.push(d1, d2);
-        this.transitions.get(q0)!.push(...(node.nonGreedy ? [d3, d0] : [d0, d3]));
+        const q1 = childNFA.initialState;
+        const f1 = childNFA.acceptingState;
+        if (node.nonGreedy) {
+          this.addTransition(q0, null, f0);
+          this.addTransition(q0, null, q1);
+          this.addTransition(f1, null, f0);
+          this.addTransition(f1, null, q1);
+        } else {
+          this.addTransition(q0, null, q1);
+          this.addTransition(q0, null, f0);
+          this.addTransition(f1, null, q1);
+          this.addTransition(f1, null, f0);
+        }
         return {
           initialState: q0,
           acceptingState: f0,
@@ -152,6 +151,10 @@ class NFABuilder {
     this.states.push(state);
     this.transitions.set(state, []);
     return state;
+  }
+
+  private addTransition(source: State, char: Char | null, destination: State): void {
+    this.transitions.get(source)!.push({ char, destination });
   }
 }
 
