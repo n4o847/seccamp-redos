@@ -210,21 +210,24 @@ function eliminateEpsilonTransitions(nfa: NormalizedNFA): NonNormalizedNFA {
 }
 
 function toDOT(nfa: NFA): string {
-  interface Edge {
-    src: string;
-    dst: string;
+  type Edge = {
+    source: string;
+    destination: string;
+    priority: number;
     label: string;
-  }
+  };
 
-  const transitions: Edge[] = [];
+  const edges: Edge[] = [];
   for (const [q, ds] of nfa.transitions) {
-    for (const d of ds) {
-      transitions.push({
-        src: q.id,
-        dst: d.destination.id,
+    for (let i = 0; i < ds.length; i++) {
+      const d = ds[i];
+      edges.push({
+        source: q.id,
+        destination: d.destination.id,
+        priority: i + 1,
         label: d.char === null ? 'ε' :
-                d.char.type === 'Dot' ? 'Σ' :
-                rerejs.nodeToString(d.char),
+               d.char.type === 'Dot' ? 'Σ' :
+               rerejs.nodeToString(d.char),
       });
     }
   }
@@ -232,15 +235,18 @@ function toDOT(nfa: NFA): string {
   out += `digraph G {\n`;
   const acceptingStates = nfa.normalized ? new Set([nfa.acceptingState]) : nfa.acceptingStates;
   for (const q of nfa.states) {
-    out += `    ${q.id} [shape = ${acceptingStates.has(q) ? `doublecircle` : `circle`}];\n`;
+    const shape = acceptingStates.has(q) ? `doublecircle` : `circle`;
+    out += `    ${q.id} [shape = ${shape}];\n`;
   }
   const initialStates = nfa.normalized ? [nfa.initialState] : nfa.initialStates;
-  for (const q of initialStates) {
+  for (let i = 0; i < initialStates.length; i++) {
+    const q = initialStates[i];
+    const priority = i + 1;
     out += `    ${q.id}_init [shape = point];\n`;
-    out += `    ${q.id}_init -> ${q.id};\n`;
+    out += `    ${q.id}_init -> ${q.id} [taillabel = "${priority}"];\n`;
   }
-  for (const e of transitions.values()) {
-    out += `    ${e.src} -> ${e.dst} [label = ${JSON.stringify(e.label)}];\n`;
+  for (const e of edges) {
+    out += `    ${e.source} -> ${e.destination} [taillabel = "${e.priority}", label = ${JSON.stringify(e.label)}];\n`;
   }
   out += `}\n`;
   return out;
