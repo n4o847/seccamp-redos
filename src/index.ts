@@ -73,8 +73,8 @@ class NFABuilder {
         };
       }
       case 'Disjunction': {
-        const childNFAs = node.children.map((child) => this.buildChild(child));
         const q0 = this.createState();
+        const childNFAs = node.children.map((child) => this.buildChild(child));
         const f0 = this.createState();
         for (const childNFA of childNFAs) {
           const q1 = childNFA.initialState;
@@ -112,8 +112,8 @@ class NFABuilder {
         }
       }
       case 'Many': {
-        const childNFA = this.buildChild(node.child);
         const q0 = this.createState();
+        const childNFA = this.buildChild(node.child);
         const f0 = this.createState();
         const q1 = childNFA.initialState;
         const f1 = childNFA.acceptingState;
