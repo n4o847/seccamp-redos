@@ -172,7 +172,6 @@ type ClosureItem = {
 
 class Eliminator {
   private newStateList: State[] = [];
-  private newAcceptingStateSet: Set<State> = new Set();
   private newTransitions: Map<State, Transition[]> = new Map();
 
   constructor(
@@ -181,18 +180,22 @@ class Eliminator {
 
   eliminate(): NonNormalizedNFA {
     const queue = [];
-    queue.push(this.nfa.initialState);
+    const newInitialState = this.nfa.initialState;
+    const newAcceptingStateSet = new Set<State>();
+    this.addState(newInitialState);
+    queue.push(newInitialState);
     while (queue.length !== 0) {
-      const q = queue.shift()!;
-      this.addState(q);
-      const c = this.buildClosure(q);
+      const q0 = queue.shift()!;
+      const c = this.buildClosure(q0);
       for (const ci of c) {
         if (ci.accepting) {
-          this.newAcceptingStateSet.add(q);
+          newAcceptingStateSet.add(q0);
         } else {
-          this.addTransition(q, ci.char, ci.destination);
-          if (!this.newStateList.includes(ci.destination)) {
-            queue.push(ci.destination);
+          const q1 = ci.destination;
+          this.addTransition(q0, ci.char, q1);
+          if (!this.newStateList.includes(q1)) {
+            this.addState(q1);
+            queue.push(q1);
           }
         }
       }
@@ -200,8 +203,8 @@ class Eliminator {
     return {
       normalized: false,
       states: this.newStateList,
-      initialState: this.nfa.initialState,
-      acceptingStates: this.newAcceptingStateSet,
+      initialState: newInitialState,
+      acceptingStates: newAcceptingStateSet,
       transitions: this.newTransitions,
     };
   }
@@ -296,6 +299,7 @@ function main() {
     const enfa = new NFABuilder(pat).build();
     console.log(toDOT(enfa));
     const nfa = eliminateEpsilonTransitions(enfa);
+    console.log(nfa);
     console.log(toDOT(nfa));
   }
 }
