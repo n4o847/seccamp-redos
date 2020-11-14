@@ -164,10 +164,8 @@ function eliminateEpsilonTransitions(nfa: NormalizedNFA): NonNormalizedNFA {
 
 type ClosureItem = {
   accepting: true;
-  source: State;
 } | {
   accepting: false;
-  source: State;
   char: Char;
   destination: State;
 };
@@ -212,13 +210,13 @@ class Eliminator {
     if (path.includes(q)) {
       return [];
     } else if (q === this.nfa.acceptingState) {
-      return [{ accepting: true, source: q }];
+      return [{ accepting: true }];
     } else {
       return this.nfa.transitions.get(q)!.flatMap((d) => {
         if (d.char === null) {
           return this.buildClosure(d.destination, [...path, q]);
         } else {
-          return [{ accepting: false, source: q, char: d.char, destination: d.destination }];
+          return [{ accepting: false, char: d.char, destination: d.destination }];
         }
       });
     }
