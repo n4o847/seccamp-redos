@@ -159,54 +159,79 @@ class NFABuilder {
 }
 
 function eliminateEpsilonTransitions(nfa: NormalizedNFA): NonNormalizedNFA {
-  const states = nfa.states;
-  const initialStates = [nfa.initialState];
-  const acceptingStates = new Set([nfa.acceptingState]);
-  const transitions = new Map(nfa.transitions);
-  let modified = true;
-  while (modified) {
-    modified = false;
-    const toEliminate = new Set<Transition>();
-    for (const q0 of states) {
-      const q0Transitions: Transition[] = [];
-      for (const d0 of transitions.get(q0)!) {
-        q0Transitions.push(d0);
-        const q1 = d0.destination;
-        for (const d1 of transitions.get(q1)!) {
-          if (d1.char === null) {
-            if (!transitions.get(q0)!.find(({ char, destination }) => char === d0.char && destination === d1.destination)) {
-              q0Transitions.push({
-                char: d0.char,
-                destination: d1.destination,
-              });
-              modified = true;
-            }
-            toEliminate.add(d1);
-            if (acceptingStates.has(d1.destination)) {
-              acceptingStates.add(q1);
-            }
+  return new Eliminator(nfa).eliminate();
+}
+
+type ClosureItem = {
+  accepting: true;
+  source: State;
+} | {
+  accepting: false;
+  source: State;
+  char: Char;
+  destination: State;
+};
+
+class Eliminator {
+  private newStateList: State[] = [];
+  private newAcceptingStateSet: Set<State> = new Set();
+  private newTransitions: Map<State, Transition[]> = new Map();
+
+  constructor(
+    private nfa: NormalizedNFA,
+  ) {}
+
+  eliminate(): NonNormalizedNFA {
+    const queue = [];
+    queue.push(this.nfa.initialState);
+    while (queue.length !== 0) {
+      const q = queue.shift()!;
+      this.addState(q);
+      const c = this.buildClosure(q);
+      for (const ci of c) {
+        if (ci.accepting) {
+          this.newAcceptingStateSet.add(q);
+        } else {
+          this.addTransition(q, ci.char, ci.destination);
+          if (!this.newStateList.includes(ci.destination)) {
+            queue.push(ci.destination);
           }
         }
       }
-      transitions.set(q0, q0Transitions);
     }
-    for (const q0 of states) {
-      transitions.set(q0, transitions.get(q0)!.filter((d0) => !toEliminate.has(d0)));
+    return {
+      normalized: false,
+      states: this.newStateList,
+      initialStates: [this.nfa.initialState],
+      acceptingStates: this.newAcceptingStateSet,
+      transitions: this.newTransitions,
+    };
+  }
+
+  private buildClosure(q: State, path: State[] = []): ClosureItem[] {
+    if (path.includes(q)) {
+      return [];
+    } else if (q === this.nfa.acceptingState) {
+      return [{ accepting: true, source: q }];
+    } else {
+      return this.nfa.transitions.get(q)!.flatMap((d) => {
+        if (d.char === null) {
+          return this.buildClosure(d.destination, [...path, q]);
+        } else {
+          return [{ accepting: false, source: q, char: d.char, destination: d.destination }];
+        }
+      });
     }
   }
-  for (const d0 of transitions.get(nfa.initialState)!) {
-    if (d0.char === null) {
-      initialStates.push(d0.destination);
-    }
+
+  private addState(oldState: State): void {
+    this.newStateList.push(oldState);
+    this.newTransitions.set(oldState, []);
   }
-  transitions.set(nfa.initialState, transitions.get(nfa.initialState)!.filter((d0) => d0.char !== null));
-  return {
-    normalized: false,
-    states,
-    initialStates,
-    acceptingStates,
-    transitions,
-  };
+
+  private addTransition(source: State, char: Char, destination: State): void {
+    this.newTransitions.get(source)!.push({ char, destination });
+  }
 }
 
 function toDOT(nfa: NFA): string {
