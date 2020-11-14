@@ -50,9 +50,9 @@ class Eliminator {
     }
     return {
       type: 'NonEpsilonNFA',
-      states: this.newStateList,
+      stateList: this.newStateList,
       initialState: newInitialState,
-      acceptingStates: newAcceptingStateSet,
+      acceptingStateSet: newAcceptingStateSet,
       transitions: this.newTransitions,
     };
   }

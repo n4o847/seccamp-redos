@@ -6,7 +6,7 @@ export type NFA =
 
 export type EpsilonNFA = {
   type: 'EpsilonNFA';
-  states: State[];
+  stateList: State[];
   initialState: State;
   acceptingState: State;
   transitions: Map<State, NullableTransition[]>;
@@ -14,9 +14,9 @@ export type EpsilonNFA = {
 
 export type NonEpsilonNFA = {
   type: 'NonEpsilonNFA';
-  states: State[];
+  stateList: State[];
   initialState: State;
-  acceptingStates: Set<State>;
+  acceptingStateSet: Set<State>;
   transitions: Map<State, NonNullableTransition[]>;
 };
 

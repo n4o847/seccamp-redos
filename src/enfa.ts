@@ -6,12 +6,12 @@ import {
   NullableTransition,
 } from './types';
 
-export function buildNFA(pattern: rerejs.Pattern) {
-  return new NFABuilder(pattern).build();
+export function buildEpsilonNFA(pattern: rerejs.Pattern): EpsilonNFA {
+  return new Builder(pattern).build();
 }
 
-class NFABuilder {
-  private states: State[] = [];
+class Builder {
+  private stateList: State[] = [];
   private transitions: Map<State, NullableTransition[]> = new Map();
   private stateId = 0;
 
@@ -20,13 +20,13 @@ class NFABuilder {
   ) {}
 
   build(): EpsilonNFA {
-    this.states = [];
+    this.stateList = [];
     this.transitions = new Map();
     this.stateId = 0;
     const { initialState, acceptingState } = this.buildChild(this.pattern.child);
     return {
       type: 'EpsilonNFA',
-      states: this.states,
+      stateList: this.stateList,
       initialState,
       acceptingState,
       transitions: this.transitions,
@@ -123,7 +123,7 @@ class NFABuilder {
     const state = {
       id: `q${this.stateId++}`,
     };
-    this.states.push(state);
+    this.stateList.push(state);
     this.transitions.set(state, []);
     return state;
   }

@@ -1,5 +1,5 @@
 import * as rerejs from 'rerejs';
-import { buildNFA } from './enfa';
+import { buildEpsilonNFA } from './enfa';
 import { eliminateEpsilonTransitions } from './nfa';
 import { toDOT } from './viz';
 
@@ -21,7 +21,7 @@ function main() {
   for (const src of sources) {
     console.log(src);
     const pat = new rerejs.Parser(src).parse();
-    const enfa = buildNFA(pat);
+    const enfa = buildEpsilonNFA(pat);
     console.log(toDOT(enfa));
     const nfa = eliminateEpsilonTransitions(enfa);
     console.log(toDOT(nfa));

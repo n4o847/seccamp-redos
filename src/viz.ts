@@ -27,14 +27,14 @@ export function toDOT(nfa: NFA): string {
   }
   let out = '';
   out += `digraph G {\n`;
-  const acceptingStates = nfa.type === 'EpsilonNFA' ? new Set([nfa.acceptingState]) : nfa.acceptingStates;
-  for (const q of nfa.states) {
-    const shape = acceptingStates.has(q) ? `doublecircle` : `circle`;
+  const acceptingStateSet = nfa.type === 'EpsilonNFA' ? new Set([nfa.acceptingState]) : nfa.acceptingStateSet;
+  for (const q of nfa.stateList) {
+    const shape = acceptingStateSet.has(q) ? `doublecircle` : `circle`;
     out += `    ${q.id} [shape = ${shape}];\n`;
   }
-  const initialStates = [nfa.initialState];
-  for (let i = 0; i < initialStates.length; i++) {
-    const q = initialStates[i];
+  const initialStateList = [nfa.initialState];
+  for (let i = 0; i < initialStateList.length; i++) {
+    const q = initialStateList[i];
     const priority = i + 1;
     out += `    ${q.id}_init [shape = point];\n`;
     out += `    ${q.id}_init -> ${q.id} [taillabel = "${priority}"];\n`;
