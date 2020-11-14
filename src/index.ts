@@ -15,7 +15,7 @@ type NormalizedNFA = {
 type NonNormalizedNFA = {
   normalized: false;
   states: State[];
-  initialStates: State[];
+  initialState: State;
   acceptingStates: Set<State>;
   transitions: Map<State, Transition[]>;
 };
@@ -202,7 +202,7 @@ class Eliminator {
     return {
       normalized: false,
       states: this.newStateList,
-      initialStates: [this.nfa.initialState],
+      initialState: this.nfa.initialState,
       acceptingStates: this.newAcceptingStateSet,
       transitions: this.newTransitions,
     };
@@ -263,7 +263,7 @@ function toDOT(nfa: NFA): string {
     const shape = acceptingStates.has(q) ? `doublecircle` : `circle`;
     out += `    ${q.id} [shape = ${shape}];\n`;
   }
-  const initialStates = nfa.normalized ? [nfa.initialState] : nfa.initialStates;
+  const initialStates = [nfa.initialState];
   for (let i = 0; i < initialStates.length; i++) {
     const q = initialStates[i];
     const priority = i + 1;
