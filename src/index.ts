@@ -31,7 +31,7 @@ function toDOT(nfa: NFA): string {
   }
   let out = '';
   out += `digraph G {\n`;
-  const acceptingStates = nfa.normalized ? new Set([nfa.acceptingState]) : nfa.acceptingStates;
+  const acceptingStates = nfa.type === 'EpsilonNFA' ? new Set([nfa.acceptingState]) : nfa.acceptingStates;
   for (const q of nfa.states) {
     const shape = acceptingStates.has(q) ? `doublecircle` : `circle`;
     out += `    ${q.id} [shape = ${shape}];\n`;

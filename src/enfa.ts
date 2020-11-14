@@ -1,9 +1,9 @@
 import * as rerejs from 'rerejs';
 import {
-  NormalizedNFA,
+  EpsilonNFA,
   State,
   Char,
-  Transition,
+  NullableTransition,
 } from './types';
 
 export function buildNFA(pattern: rerejs.Pattern) {
@@ -12,20 +12,20 @@ export function buildNFA(pattern: rerejs.Pattern) {
 
 class NFABuilder {
   private states: State[] = [];
-  private transitions: Map<State, Transition[]> = new Map();
+  private transitions: Map<State, NullableTransition[]> = new Map();
   private stateId = 0;
 
   constructor(
     private pattern: rerejs.Pattern,
   ) {}
 
-  build(): NormalizedNFA {
+  build(): EpsilonNFA {
     this.states = [];
     this.transitions = new Map();
     this.stateId = 0;
     const { initialState, acceptingState } = this.buildChild(this.pattern.child);
     return {
-      normalized: true,
+      type: 'EpsilonNFA',
       states: this.states,
       initialState,
       acceptingState,
@@ -33,7 +33,7 @@ class NFABuilder {
     };
   }
 
-  private buildChild(node: rerejs.Node): Pick<NormalizedNFA, 'initialState' | 'acceptingState'> {
+  private buildChild(node: rerejs.Node): Pick<EpsilonNFA, 'initialState' | 'acceptingState'> {
     switch (node.type) {
       case 'Char':
       case 'EscapeClass':

@@ -1,12 +1,12 @@
 import {
-  NonNormalizedNFA,
-  NormalizedNFA,
+  EpsilonNFA,
+  NonEpsilonNFA,
   State,
   Char,
-  Transition,
+  NonNullableTransition,
 } from './types';
 
-export function eliminateEpsilonTransitions(nfa: NormalizedNFA): NonNormalizedNFA {
+export function eliminateEpsilonTransitions(nfa: EpsilonNFA): NonEpsilonNFA {
   return new Eliminator(nfa).eliminate();
 }
 
@@ -20,13 +20,13 @@ type ClosureItem = {
 
 class Eliminator {
   private newStateList: State[] = [];
-  private newTransitions: Map<State, Transition[]> = new Map();
+  private newTransitions: Map<State, NonNullableTransition[]> = new Map();
 
   constructor(
-    private nfa: NormalizedNFA,
+    private nfa: EpsilonNFA,
   ) {}
 
-  eliminate(): NonNormalizedNFA {
+  eliminate(): NonEpsilonNFA {
     const queue = [];
     const newInitialState = this.nfa.initialState;
     const newAcceptingStateSet = new Set<State>();
@@ -49,7 +49,7 @@ class Eliminator {
       }
     }
     return {
-      normalized: false,
+      type: 'NonEpsilonNFA',
       states: this.newStateList,
       initialState: newInitialState,
       acceptingStates: newAcceptingStateSet,
