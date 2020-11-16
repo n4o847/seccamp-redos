@@ -28,8 +28,8 @@ export function toDOT(automaton: Automaton): string {
           source: q.id,
           destination: d.destination.id,
           priority: ordered ? i + 1 : null,
-          label: d.char === null ? 'ε' :
-                 d.char.type === 'Dot' ? 'Σ' :
+          label: d.char === null ? '&epsilon;' :
+                 d.char.type === 'Dot' ? '&Sigma;' :
                  rerejs.nodeToString(d.char),
         });
       }
@@ -47,7 +47,7 @@ export function toDOT(automaton: Automaton): string {
     }
   }
   let out = '';
-  out += `digraph G {\n`;
+  out += `digraph {\n`;
   const acceptingStateSet = automaton.type === 'EpsilonNFA' ? new Set([automaton.acceptingState]) : automaton.acceptingStateSet;
   for (const q of automaton.stateList) {
     const shape = acceptingStateSet.has(q) ? `doublecircle` : `circle`;

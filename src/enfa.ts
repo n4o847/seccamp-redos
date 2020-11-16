@@ -114,7 +114,7 @@ class Builder {
         return this.buildChild(node.child);
       }
       default: {
-        throw new Error('Unimplemented!');
+        throw new Error('unimplemented');
       }
     }
   }
