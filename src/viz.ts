@@ -36,12 +36,12 @@ export function toDOT(automaton: Automaton): string {
     }
   } else {
     for (const [q, ds] of automaton.transitions) {
-      for (const [a, d] of ds) {
+      for (const d of ds) {
         edges.push({
           source: q.id,
-          destination: d.id,
+          destination: d.destination.id,
           priority: null,
-          label: a,
+          label: d.charSet.toRegExpPattern(),
         });
       }
     }

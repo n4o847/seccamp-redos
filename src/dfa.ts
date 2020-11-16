@@ -1,9 +1,11 @@
+import { CharSet } from 'rerejs';
 import {
   NonEpsilonNFA,
   UnorderedNFA,
   DFA,
   State,
   NonNullableTransition,
+  CharSetTransition,
 } from './types';
 import { alphabet, contains } from './char';
 import { equals, intersect } from './util';
@@ -36,7 +38,7 @@ export function determinize(nfa: UnorderedNFA): DFA {
 
 class Determinizer {
   private newStateList: State[] = [];
-  private newTransitions: Map<State, Map<string, State>> = new Map();
+  private newTransitions: Map<State, CharSetTransition[]> = new Map();
   private newStateToOldStateSet: Map<State, Set<State>> = new Map();
   private newStateId = 0;
 
@@ -91,12 +93,19 @@ class Determinizer {
       id: `Q${this.newStateId++}`,
     };
     this.newStateList.push(state);
-    this.newTransitions.set(state, new Map());
+    this.newTransitions.set(state, []);
     this.newStateToOldStateSet.set(state, oldStateSet);
     return state;
   }
 
-  addTransition(source: State, char: string, destination: State): void {
-    this.newTransitions.get(source)!.set(char, destination);
+  addTransition(source: State, codePoint: number, destination: State): void {
+    for (const d of this.newTransitions.get(source)!) {
+      if (d.destination === destination) {
+        d.charSet.add(codePoint, codePoint + 1);
+        return;
+      }
+    }
+    const charSet = new CharSet([codePoint, codePoint + 1]);
+    this.newTransitions.get(source)!.push({ charSet, destination });
   }
 }

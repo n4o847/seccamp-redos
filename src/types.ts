@@ -35,7 +35,7 @@ export type DFA = {
   stateList: State[];
   initialState: State;
   acceptingStateSet: Set<State>;
-  transitions: Map<State, Map<string, State>>;
+  transitions: Map<State, CharSetTransition[]>;
 };
 
 export type State = {
@@ -59,5 +59,10 @@ export type NullableTransition = {
 
 export type NonNullableTransition = {
   char: Char;
+  destination: State;
+};
+
+export type CharSetTransition = {
+  charSet: rerejs.CharSet;
   destination: State;
 };

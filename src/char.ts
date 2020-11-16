@@ -2,33 +2,33 @@ import {
   Char,
 } from './types';
 
-const digit = new Set<string>();
-const invertDigit = new Set<string>();
-const word = new Set<string>();
-const invertWord = new Set<string>();
-const space = new Set<string>();
-const invertSpace = new Set<string>();
-const dot = new Set<string>();
+const digit = new Set<number>();
+const invertDigit = new Set<number>();
+const word = new Set<number>();
+const invertWord = new Set<number>();
+const space = new Set<number>();
+const invertSpace = new Set<number>();
+const dot = new Set<number>();
 
 function init() {
   for (let i = 0x00; i <= 0x7f; i++) {
     const c = String.fromCharCode(i);
     if (/^\d$/.test(c)) {
-      digit.add(c);
+      digit.add(i);
     } else {
-      invertDigit.add(c);
+      invertDigit.add(i);
     }
     if (/^\w$/.test(c)) {
-      word.add(c);
+      word.add(i);
     } else {
-      invertWord.add(c);
+      invertWord.add(i);
     }
     if (/^\s$/.test(c)) {
-      space.add(c);
+      space.add(i);
     } else {
-      invertSpace.add(c);
+      invertSpace.add(i);
     }
-    dot.add(c);
+    dot.add(i);
   }
 }
 
@@ -36,20 +36,20 @@ init();
 
 export const alphabet = dot;
 
-export function contains(node: Char, char: string): boolean {
+export function contains(node: Char, codePoint: number): boolean {
   switch (node.type) {
     case 'Char': {
-      return node.raw === char;
+      return node.value === codePoint;
     }
     case 'EscapeClass': {
       const expectation = !node.invert;
       switch (node.kind) {
         case 'digit':
-          return digit.has(char) === expectation;
+          return digit.has(codePoint) === expectation;
         case 'word':
-          return word.has(char) === expectation;
+          return word.has(codePoint) === expectation;
         case 'space':
-          return space.has(char) === expectation;
+          return space.has(codePoint) === expectation;
         case 'unicode_property':
           throw new Error('unimplemented');
         case 'unicode_property_value':
@@ -62,10 +62,10 @@ export function contains(node: Char, char: string): boolean {
         switch (child.type) {
           case 'Char':
           case 'EscapeClass': {
-            return contains(child, char) === expectation;
+            return contains(child, codePoint) === expectation;
           }
           case 'ClassRange': {
-            const result = child.children[0].raw <= char && char <= child.children[1].raw;
+            const result = child.children[0].value <= codePoint && codePoint <= child.children[1].value;
             return result === expectation;
           }
         }
