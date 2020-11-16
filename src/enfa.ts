@@ -35,18 +35,6 @@ class Builder {
 
   private buildChild(node: rerejs.Node): Pick<EpsilonNFA, 'initialState' | 'acceptingState'> {
     switch (node.type) {
-      case 'Char':
-      case 'EscapeClass':
-      case 'Class':
-      case 'Dot': {
-        const q0 = this.createState();
-        const f0 = this.createState();
-        this.addTransition(q0, node, f0);
-        return {
-          initialState: q0,
-          acceptingState: f0,
-        };
-      }
       case 'Disjunction': {
         const q0 = this.createState();
         const childNFAs = node.children.map((child) => this.buildChild(child));
@@ -86,6 +74,11 @@ class Builder {
           };
         }
       }
+      case 'Capture':
+      case 'NamedCapture':
+      case 'Group': {
+        return this.buildChild(node.child);
+      }
       case 'Many': {
         const q0 = this.createState();
         const childNFA = this.buildChild(node.child);
@@ -108,12 +101,30 @@ class Builder {
           acceptingState: f0,
         };
       }
-      case 'Capture':
-      case 'NamedCapture':
-      case 'Group': {
-        return this.buildChild(node.child);
+      case 'Some':
+      case 'Optional':
+      case 'Repeat':
+      case 'WordBoundary':
+      case 'LineBegin':
+      case 'LineEnd':
+      case 'LookAhead':
+      case 'LookBehind': {
+        throw new Error('unimplemented');
       }
-      default: {
+      case 'Char':
+      case 'EscapeClass':
+      case 'Class':
+      case 'Dot': {
+        const q0 = this.createState();
+        const f0 = this.createState();
+        this.addTransition(q0, node, f0);
+        return {
+          initialState: q0,
+          acceptingState: f0,
+        };
+      }
+      case 'BackRef':
+      case 'NamedBackRef': {
         throw new Error('unimplemented');
       }
     }
