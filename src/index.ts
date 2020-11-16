@@ -20,14 +20,17 @@ function main() {
     String.raw`[a-z][0-9a-z]*`,
   ];
   for (const src of sources) {
-    console.log(src);
+    console.log(`//`, src);
     const pat = new rerejs.Parser(src).parse();
     const enfa = buildEpsilonNFA(pat);
     console.log(toDOT(enfa));
+    console.log(`//`, src, `eliminated`);
     const nfa = eliminateEpsilonTransitions(enfa);
     console.log(toDOT(nfa));
+    console.log(`//`, src, `reversed`);
     const rnfa = reverseNFA(nfa);
     console.log(toDOT(rnfa));
+    console.log(`//`, src, `determinized`);
     const dfa = determinize(rnfa);
     console.log(toDOT(dfa));
   }
