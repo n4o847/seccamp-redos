@@ -58,25 +58,18 @@ export function contains(node: Char, char: string): boolean {
     }
     case 'Class': {
       const expectation = !node.invert;
-      for (const child of node.children) {
+      return node.children.some((child) => {
         switch (child.type) {
           case 'Char':
           case 'EscapeClass': {
-            if (contains(child, char) === expectation) {
-              return true;
-            }
-            break;
+            return contains(child, char) === expectation;
           }
           case 'ClassRange': {
             const result = child.children[0].raw <= char && char <= child.children[1].raw;
-            if (result === expectation) {
-              return true;
-            }
-            break;
+            return result === expectation;
           }
         }
-      }
-      return false;
+      });
     }
     case 'Dot': {
       return true;
