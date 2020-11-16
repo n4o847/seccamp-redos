@@ -3,14 +3,15 @@ import {
   NFA,
 } from './types';
 
-export function toDOT(nfa: NFA): string {
-  type Edge = {
-    source: string;
-    destination: string;
-    priority: number;
-    label: string;
-  };
+type Edge = {
+  source: string;
+  destination: string;
+  priority: number | null;
+  label: string;
+};
 
+export function toDOT(nfa: NFA): string {
+  const ordered = nfa.type !== 'UnorderedNFA';
   const edges: Edge[] = [];
   for (const [q, ds] of nfa.transitions) {
     for (let i = 0; i < ds.length; i++) {
@@ -18,7 +19,7 @@ export function toDOT(nfa: NFA): string {
       edges.push({
         source: q.id,
         destination: d.destination.id,
-        priority: i + 1,
+        priority: ordered ? i + 1 : null,
         label: d.char === null ? 'ε' :
                d.char.type === 'Dot' ? 'Σ' :
                rerejs.nodeToString(d.char),
@@ -32,15 +33,15 @@ export function toDOT(nfa: NFA): string {
     const shape = acceptingStateSet.has(q) ? `doublecircle` : `circle`;
     out += `    ${q.id} [shape = ${shape}];\n`;
   }
-  const initialStateList = [nfa.initialState];
+  const initialStateList = nfa.type === 'UnorderedNFA' ? Array.from(nfa.initialStateSet) : [nfa.initialState];
   for (let i = 0; i < initialStateList.length; i++) {
     const q = initialStateList[i];
     const priority = i + 1;
     out += `    ${q.id}_init [shape = point];\n`;
-    out += `    ${q.id}_init -> ${q.id} [taillabel = "${priority}"];\n`;
+    out += `    ${q.id}_init -> ${q.id}${ordered ? ` [taillabel = "${priority}"]` : ``};\n`;
   }
   for (const e of edges) {
-    out += `    ${e.source} -> ${e.destination} [taillabel = "${e.priority}", label = ${JSON.stringify(e.label)}];\n`;
+    out += `    ${e.source} -> ${e.destination} [${ordered ? `taillabel = "${e.priority}", ` : ``}label = ${JSON.stringify(e.label)}];\n`;
   }
   out += `}\n`;
   return out;

@@ -2,7 +2,8 @@ import * as rerejs from 'rerejs';
 
 export type NFA =
   | EpsilonNFA
-  | NonEpsilonNFA;
+  | NonEpsilonNFA
+  | UnorderedNFA;
 
 export type EpsilonNFA = {
   type: 'EpsilonNFA';
@@ -16,6 +17,14 @@ export type NonEpsilonNFA = {
   type: 'NonEpsilonNFA';
   stateList: State[];
   initialState: State;
+  acceptingStateSet: Set<State>;
+  transitions: Map<State, NonNullableTransition[]>;
+};
+
+export type UnorderedNFA = {
+  type: 'UnorderedNFA';
+  stateList: State[];
+  initialStateSet: Set<State>;
   acceptingStateSet: Set<State>;
   transitions: Map<State, NonNullableTransition[]>;
 };
