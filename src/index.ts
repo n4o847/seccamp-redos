@@ -1,7 +1,7 @@
 import * as rerejs from 'rerejs';
 import { buildEpsilonNFA } from './enfa';
 import { eliminateEpsilonTransitions } from './nfa';
-import { reverseNFA } from './dfa';
+import { reverseNFA, determinize } from './dfa';
 import { toDOT } from './viz';
 
 function main() {
@@ -28,6 +28,8 @@ function main() {
     console.log(toDOT(nfa));
     const rnfa = reverseNFA(nfa);
     console.log(toDOT(rnfa));
+    const dfa = determinize(rnfa);
+    console.log(toDOT(dfa));
   }
 }
 

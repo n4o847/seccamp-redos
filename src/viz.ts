@@ -1,6 +1,6 @@
 import * as rerejs from 'rerejs';
 import {
-  NFA,
+  Automaton,
 } from './types';
 
 type Edge = {
@@ -10,30 +10,50 @@ type Edge = {
   label: string;
 };
 
-export function toDOT(nfa: NFA): string {
-  const ordered = nfa.type !== 'UnorderedNFA';
+export function toDOT(automaton: Automaton): string {
+  const ordered = (() => {
+    switch (automaton.type) {
+      case 'EpsilonNFA': return true;
+      case 'NonEpsilonNFA': return true;
+      case 'UnorderedNFA': return false;
+      case 'DFA': return false;
+    }
+  })();
   const edges: Edge[] = [];
-  for (const [q, ds] of nfa.transitions) {
-    for (let i = 0; i < ds.length; i++) {
-      const d = ds[i];
-      edges.push({
-        source: q.id,
-        destination: d.destination.id,
-        priority: ordered ? i + 1 : null,
-        label: d.char === null ? 'ε' :
-               d.char.type === 'Dot' ? 'Σ' :
-               rerejs.nodeToString(d.char),
-      });
+  if (automaton.type !== 'DFA') {
+    for (const [q, ds] of automaton.transitions) {
+      for (let i = 0; i < ds.length; i++) {
+        const d = ds[i];
+        edges.push({
+          source: q.id,
+          destination: d.destination.id,
+          priority: ordered ? i + 1 : null,
+          label: d.char === null ? 'ε' :
+                 d.char.type === 'Dot' ? 'Σ' :
+                 rerejs.nodeToString(d.char),
+        });
+      }
+    }
+  } else {
+    for (const [q, ds] of automaton.transitions) {
+      for (const [a, d] of ds) {
+        edges.push({
+          source: q.id,
+          destination: d.id,
+          priority: null,
+          label: a,
+        });
+      }
     }
   }
   let out = '';
   out += `digraph G {\n`;
-  const acceptingStateSet = nfa.type === 'EpsilonNFA' ? new Set([nfa.acceptingState]) : nfa.acceptingStateSet;
-  for (const q of nfa.stateList) {
+  const acceptingStateSet = automaton.type === 'EpsilonNFA' ? new Set([automaton.acceptingState]) : automaton.acceptingStateSet;
+  for (const q of automaton.stateList) {
     const shape = acceptingStateSet.has(q) ? `doublecircle` : `circle`;
     out += `    ${q.id} [shape = ${shape}];\n`;
   }
-  const initialStateList = nfa.type === 'UnorderedNFA' ? Array.from(nfa.initialStateSet) : [nfa.initialState];
+  const initialStateList = automaton.type === 'UnorderedNFA' ? Array.from(automaton.initialStateSet) : [automaton.initialState];
   for (let i = 0; i < initialStateList.length; i++) {
     const q = initialStateList[i];
     const priority = i + 1;

@@ -1,9 +1,10 @@
 import * as rerejs from 'rerejs';
 
-export type NFA =
+export type Automaton =
   | EpsilonNFA
   | NonEpsilonNFA
-  | UnorderedNFA;
+  | UnorderedNFA
+  | DFA;
 
 export type EpsilonNFA = {
   type: 'EpsilonNFA';
@@ -27,6 +28,14 @@ export type UnorderedNFA = {
   initialStateSet: Set<State>;
   acceptingStateSet: Set<State>;
   transitions: Map<State, NonNullableTransition[]>;
+};
+
+export type DFA = {
+  type: 'DFA';
+  stateList: State[];
+  initialState: State;
+  acceptingStateSet: Set<State>;
+  transitions: Map<State, Map<string, State>>;
 };
 
 export type State = {
