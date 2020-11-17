@@ -11,6 +11,7 @@
     "@types/viz.js": "^2.1.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
+    "rerejs": "^0.2.0",
     "viz.js": "^2.1.2"
   },
   "devDependencies": {
