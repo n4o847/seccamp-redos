@@ -3,7 +3,7 @@ import { NonEpsilonNFA, UnorderedNFA, DFA, State, NonNullableTransition } from '
 import { equals, intersect } from './util';
 
 /**
- * NFA をリバースする。
+ * NFA をリバースする。優先度の情報は失われる。
  */
 export function reverseNFA(nfa: NonEpsilonNFA): UnorderedNFA {
   const reversedTransitions = new Map<State, NonNullableTransition[]>();
