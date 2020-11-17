@@ -84,30 +84,32 @@ class Builder {
       case 'Group': {
         return this.buildChild(node.child);
       }
-      case 'Many': {
+      case 'Many':
+      case 'Some':
+      case 'Optional': {
+        const some = node.type === 'Some';
+        const optional = node.type === 'Optional';
         const q0 = this.createState();
         const childNFA = this.buildChild(node.child);
         const f0 = this.createState();
         const q1 = childNFA.initialState;
         const f1 = childNFA.acceptingState;
         if (node.nonGreedy) {
-          this.addTransition(q0, null, f0);
-          this.addTransition(q0, null, q1);
-          this.addTransition(f1, null, f0);
-          this.addTransition(f1, null, q1);
+          if (!some)     this.addTransition(q0, null, f0);
+                         this.addTransition(q0, null, q1);
+                         this.addTransition(f1, null, f0);
+          if (!optional) this.addTransition(f1, null, q1);
         } else {
-          this.addTransition(q0, null, q1);
-          this.addTransition(q0, null, f0);
-          this.addTransition(f1, null, q1);
-          this.addTransition(f1, null, f0);
+                         this.addTransition(q0, null, q1);
+          if (!some)     this.addTransition(q0, null, f0);
+          if (!optional) this.addTransition(f1, null, q1);
+                         this.addTransition(f1, null, f0);
         }
         return {
           initialState: q0,
           acceptingState: f0,
         };
       }
-      case 'Some':
-      case 'Optional':
       case 'Repeat':
       case 'WordBoundary':
       case 'LineBegin':

@@ -15,6 +15,8 @@ function main() {
     String.raw`(?:)`,
     String.raw`(?:a|bc)`,
     String.raw`(a*)*`,
+    String.raw`(a+)+`,
+    String.raw`(a?)?`,
     String.raw`(\w|\d)*`,
     String.raw`(.*)="(.*)"`,
     String.raw`[a-z][0-9a-z]*`,
