@@ -8,6 +8,7 @@ export type Automaton =
 
 export type EpsilonNFA = {
   type: 'EpsilonNFA';
+  alphabet: number[];
   stateList: State[];
   initialState: State;
   acceptingState: State;
@@ -16,6 +17,7 @@ export type EpsilonNFA = {
 
 export type NonEpsilonNFA = {
   type: 'NonEpsilonNFA';
+  alphabet: number[];
   stateList: State[];
   initialState: State;
   acceptingStateSet: Set<State>;
@@ -24,6 +26,7 @@ export type NonEpsilonNFA = {
 
 export type UnorderedNFA = {
   type: 'UnorderedNFA';
+  alphabet: number[];
   stateList: State[];
   initialStateSet: Set<State>;
   acceptingStateSet: Set<State>;
@@ -32,6 +35,7 @@ export type UnorderedNFA = {
 
 export type DFA = {
   type: 'DFA';
+  alphabet: number[];
   stateList: State[];
   initialState: State;
   acceptingStateSet: Set<State>;
@@ -42,7 +46,7 @@ export type State = {
   id: string;
 };
 
-export type Char =
+export type Atom =
   | rerejs.Char
   | rerejs.EscapeClass
   | rerejs.Class
@@ -53,12 +57,12 @@ export type Transition =
   | NonNullableTransition;
 
 export type NullableTransition = {
-  char: Char | null;
+  charSet: rerejs.CharSet | null;
   destination: State;
 };
 
 export type NonNullableTransition = {
-  char: Char;
+  charSet: rerejs.CharSet;
   destination: State;
 };
 

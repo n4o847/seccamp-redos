@@ -20,30 +20,15 @@ export function toDOT(automaton: Automaton): string {
     }
   })();
   const edges: Edge[] = [];
-  if (automaton.type !== 'DFA') {
-    for (const [q, ds] of automaton.transitions) {
-      for (let i = 0; i < ds.length; i++) {
-        const d = ds[i];
-        edges.push({
-          source: q.id,
-          destination: d.destination.id,
-          priority: ordered ? i + 1 : null,
-          label: d.char === null ? '&epsilon;' :
-                 d.char.type === 'Dot' ? '&Sigma;' :
-                 rerejs.nodeToString(d.char),
-        });
-      }
-    }
-  } else {
-    for (const [q, ds] of automaton.transitions) {
-      for (const d of ds) {
-        edges.push({
-          source: q.id,
-          destination: d.destination.id,
-          priority: null,
-          label: d.charSet.toRegExpPattern(),
-        });
-      }
+  for (const [q, ds] of automaton.transitions) {
+    for (let i = 0; i < ds.length; i++) {
+      const d = ds[i];
+      edges.push({
+        source: q.id,
+        destination: d.destination.id,
+        priority: ordered ? i + 1 : null,
+        label: d.charSet === null ? '&epsilon;' : d.charSet.toRegExpPattern(),
+      });
     }
   }
   let out = '';

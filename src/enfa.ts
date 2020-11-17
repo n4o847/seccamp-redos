@@ -2,9 +2,9 @@ import * as rerejs from 'rerejs';
 import {
   EpsilonNFA,
   State,
-  Char,
   NullableTransition,
 } from './types';
+import { createCharSet } from './char';
 
 export function buildEpsilonNFA(pattern: rerejs.Pattern): EpsilonNFA {
   return new Builder(pattern).build();
@@ -14,6 +14,7 @@ class Builder {
   private stateList: State[] = [];
   private transitions: Map<State, NullableTransition[]> = new Map();
   private stateId = 0;
+  private alphabet: Set<number> = new Set();
 
   constructor(
     private pattern: rerejs.Pattern,
@@ -24,8 +25,10 @@ class Builder {
     this.transitions = new Map();
     this.stateId = 0;
     const { initialState, acceptingState } = this.buildChild(this.pattern.child);
+    const alphabet = Array.from(this.alphabet).sort((a, b) => a - b);
     return {
       type: 'EpsilonNFA',
+      alphabet,
       stateList: this.stateList,
       initialState,
       acceptingState,
@@ -117,7 +120,8 @@ class Builder {
       case 'Dot': {
         const q0 = this.createState();
         const f0 = this.createState();
-        this.addTransition(q0, node, f0);
+        const charSet = createCharSet(node, this.pattern.flagSet);
+        this.addTransition(q0, charSet, f0);
         return {
           initialState: q0,
           acceptingState: f0,
@@ -139,7 +143,12 @@ class Builder {
     return state;
   }
 
-  private addTransition(source: State, char: Char | null, destination: State): void {
-    this.transitions.get(source)!.push({ char, destination });
+  private addTransition(source: State, charSet: rerejs.CharSet | null, destination: State): void {
+    if (charSet !== null) {
+      for (const codePoint of charSet.data) {
+        this.alphabet.add(codePoint);
+      }
+    }
+    this.transitions.get(source)!.push({ charSet, destination });
   }
 }

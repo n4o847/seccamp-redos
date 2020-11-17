@@ -7,7 +7,6 @@ import {
   NonNullableTransition,
   CharSetTransition,
 } from './types';
-import { alphabet, contains } from './char';
 import { equals, intersect } from './util';
 
 export function reverseNFA(nfa: NonEpsilonNFA): UnorderedNFA {
@@ -18,13 +17,14 @@ export function reverseNFA(nfa: NonEpsilonNFA): UnorderedNFA {
   for (const [q, ds] of nfa.transitions) {
     for (const d of ds) {
       reversedTransitions.get(d.destination)!.push({
-        char: d.char,
+        charSet: d.charSet,
         destination: q,
       });
     }
   }
   return {
     type: 'UnorderedNFA',
+    alphabet: nfa.alphabet,
     stateList: nfa.stateList,
     initialStateSet: nfa.acceptingStateSet,
     acceptingStateSet: new Set([nfa.initialState]),
@@ -48,6 +48,7 @@ class Determinizer {
 
   determinize(): DFA {
     const queue: State[] = [];
+    const alphabet = this.nfa.alphabet;
     const newInitialState = this.createState(this.nfa.initialStateSet);
     const newAcceptingStateSet = new Set<State>();
     queue.push(newInitialState);
@@ -57,8 +58,9 @@ class Determinizer {
       if (intersect(qs0, this.nfa.acceptingStateSet).size !== 0) {
         newAcceptingStateSet.add(q0);
       }
-      for (const a of alphabet) {
-        const qs1 = new Set(Array.from(qs0).flatMap((q) => this.nfa.transitions.get(q)!.filter((d) => contains(d.char, a)).map((d) => d.destination)));
+      for (let i = 0; i < alphabet.length - 1; i++) {
+        const codePointRange: [number, number] = [alphabet[i], alphabet[i + 1]];
+        const qs1 = new Set(Array.from(qs0).flatMap((q) => this.nfa.transitions.get(q)!.filter((d) => d.charSet.has(codePointRange[0])).map((d) => d.destination)));
         if (qs1.size === 0) {
           continue;
         }
@@ -67,11 +69,12 @@ class Determinizer {
           q1 = this.createState(qs1);
           queue.push(q1);
         }
-        this.addTransition(q0, a, q1);
+        this.addTransition(q0, codePointRange, q1);
       }
     }
     return {
       type: 'DFA',
+      alphabet: this.nfa.alphabet,
       stateList: this.newStateList,
       initialState: newInitialState,
       acceptingStateSet: newAcceptingStateSet,
@@ -98,14 +101,14 @@ class Determinizer {
     return state;
   }
 
-  addTransition(source: State, codePoint: number, destination: State): void {
+  addTransition(source: State, codePointRange: [number, number], destination: State): void {
     for (const d of this.newTransitions.get(source)!) {
       if (d.destination === destination) {
-        d.charSet.add(codePoint, codePoint + 1);
+        d.charSet.add(codePointRange[0], codePointRange[1]);
         return;
       }
     }
-    const charSet = new CharSet([codePoint, codePoint + 1]);
+    const charSet = new CharSet(codePointRange);
     this.newTransitions.get(source)!.push({ charSet, destination });
   }
 }

@@ -1,78 +1,79 @@
+import { CharSet, FlagSet } from 'rerejs';
 import {
-  Char,
+  Atom,
 } from './types';
 
-const digit = new Set<number>();
-const invertDigit = new Set<number>();
-const word = new Set<number>();
-const invertWord = new Set<number>();
-const space = new Set<number>();
-const invertSpace = new Set<number>();
-const dot = new Set<number>();
+const digit = new CharSet();
+digit.add(0x30, 0x39 + 1);
 
-function init() {
-  for (let i = 0x00; i <= 0x7f; i++) {
-    const c = String.fromCharCode(i);
-    if (/^\d$/.test(c)) {
-      digit.add(i);
-    } else {
-      invertDigit.add(i);
-    }
-    if (/^\w$/.test(c)) {
-      word.add(i);
-    } else {
-      invertWord.add(i);
-    }
-    if (/^\s$/.test(c)) {
-      space.add(i);
-    } else {
-      invertSpace.add(i);
-    }
-    dot.add(i);
-  }
-}
+const invertDigit = digit.clone().invert();
 
-init();
+const word = new CharSet();
+word.add(0x30, 0x39 + 1);
+word.add(0x41, 0x5a + 1);
+word.add(0x61, 0x7a + 1);
+word.add(0x5f, 0x5f + 1);
 
-export const alphabet = dot;
+const invertWord = word.clone().invert();
 
-export function contains(node: Char, codePoint: number): boolean {
+const space = new CharSet();
+space.add(0x09, 0x0d + 1);
+space.add(0xa0, 0xa0 + 1);
+space.add(0xfeff, 0xfeff + 1);
+// space.addCharSet(/* Any other Unicode "Space_Separator" code point */);
+
+const invertSpace = space.clone().invert();
+
+const dot = new CharSet().invert();
+
+export function createCharSet(node: Atom, flagSet: FlagSet): CharSet {
   switch (node.type) {
     case 'Char': {
-      return node.value === codePoint;
+      const charSet = new CharSet();
+      charSet.add(node.value, node.value + 1);
+      return charSet;
     }
     case 'EscapeClass': {
-      const expectation = !node.invert;
       switch (node.kind) {
-        case 'digit':
-          return digit.has(codePoint) === expectation;
-        case 'word':
-          return word.has(codePoint) === expectation;
-        case 'space':
-          return space.has(codePoint) === expectation;
-        case 'unicode_property':
+        case 'digit': {
+          return node.invert ? invertDigit : digit;
+        }
+        case 'word': {
+          return node.invert ? invertWord : word;
+        }
+        case 'space': {
+          return node.invert ? invertSpace : space;
+        }
+        case 'unicode_property': {
           throw new Error('unimplemented');
-        case 'unicode_property_value':
+        }
+        case 'unicode_property_value': {
           throw new Error('unimplemented');
+        }
       }
     }
     case 'Class': {
-      const expectation = !node.invert;
-      return node.children.some((child) => {
+      const charSet = new CharSet();
+      for (const child of node.children) {
         switch (child.type) {
           case 'Char':
           case 'EscapeClass': {
-            return contains(child, codePoint) === expectation;
+            charSet.addCharSet(createCharSet(child, flagSet));
+            break;
           }
           case 'ClassRange': {
-            const result = child.children[0].value <= codePoint && codePoint <= child.children[1].value;
-            return result === expectation;
+            charSet.add(child.children[0].value, child.children[1].value + 1);
+            break;
           }
         }
-      });
+      }
+      if (node.invert) {
+        charSet.invert();
+      }
+      return charSet;
     }
     case 'Dot': {
-      return true;
+      return dot;
     }
   }
 }
