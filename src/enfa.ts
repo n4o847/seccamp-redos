@@ -38,6 +38,12 @@ class Builder {
     };
   }
 
+  /**
+   * 以下の条件を満たす標準オートマトンを構成する。
+   * - ただひとつの初期状態 q とただひとつの受理状態 f を持ち、q と f は異なる。
+   * - 初期状態 q への遷移は持たない。
+   * - 受理状態 f からの遷移は持たない。
+   */
   private buildChild(node: Node): Pick<EpsilonNFA, 'initialState' | 'acceptingState'> {
     switch (node.type) {
       case 'Disjunction': {
