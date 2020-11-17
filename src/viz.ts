@@ -9,7 +9,11 @@ type Edge = {
   label: string;
 };
 
-export function toDOT(automaton: Automaton): string {
+type DOTOptions = {
+  horizontal: boolean;
+};
+
+export function toDOT(automaton: Automaton, options: Partial<DOTOptions> = {}): string {
   const ordered = (() => {
     switch (automaton.type) {
       case 'EpsilonNFA': return true;
@@ -32,6 +36,9 @@ export function toDOT(automaton: Automaton): string {
   }
   let out = '';
   out += `digraph {\n`;
+  if (options.horizontal) {
+    out += `rankdir = LR;\n`;
+  }
   const acceptingStateSet = automaton.type === 'EpsilonNFA' ? new Set([automaton.acceptingState]) : automaton.acceptingStateSet;
   for (const q of automaton.stateList) {
     const shape = acceptingStateSet.has(q) ? `doublecircle` : `circle`;
