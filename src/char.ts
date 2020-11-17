@@ -3,6 +3,8 @@ import {
   Atom,
 } from './types';
 
+export const MAX_CODE_POINT = 0x110000;
+
 const digit = new CharSet();
 digit.add(0x30, 0x39 + 1);
 
