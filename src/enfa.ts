@@ -17,9 +17,6 @@ class Builder {
   ) {}
 
   build(): EpsilonNFA {
-    this.stateList = [];
-    this.transitions = new Map();
-    this.stateId = 0;
     const { initialState, acceptingState } = this.buildChild(this.pattern.child);
     const alphabet = Array.from(this.alphabet).sort((a, b) => a - b);
     return {

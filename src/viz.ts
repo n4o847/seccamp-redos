@@ -1,3 +1,4 @@
+import { CharSet } from 'rerejs';
 import { Automaton } from './types';
 import { MAX_CODE_POINT } from './char';
 
@@ -21,23 +22,11 @@ export function toDOT(automaton: Automaton): string {
   for (const [q, ds] of automaton.transitions) {
     for (let i = 0; i < ds.length; i++) {
       const d = ds[i];
-      let label = '';
-      if (d.charSet === null) {
-        label = '&epsilon;';
-      } else if (d.charSet.data[0] === 0 && d.charSet.data[d.charSet.data.length - 1] === MAX_CODE_POINT) {
-        if (d.charSet.data.length === 2) {
-          label = '&Sigma;';
-        } else {
-          label = d.charSet.clone().invert().toRegExpPattern(true);
-        }
-      } else {
-        label = d.charSet.toRegExpPattern();
-      }
       edges.push({
         source: q.id,
         destination: d.destination.id,
         priority: ordered ? i + 1 : null,
-        label,
+        label: toLabelString(d.charSet),
       });
     }
   }
@@ -60,4 +49,18 @@ export function toDOT(automaton: Automaton): string {
   }
   out += `}\n`;
   return out;
+}
+
+function toLabelString(charSet: CharSet | null): string {
+  if (charSet === null) {
+    return '&epsilon;';
+  } else if (charSet.data[0] === 0 && charSet.data[charSet.data.length - 1] === MAX_CODE_POINT) {
+    if (charSet.data.length === 2) {
+      return '&Sigma;';
+    } else {
+      return charSet.clone().invert().toRegExpPattern(true);
+    }
+  } else {
+    return charSet.toRegExpPattern();
+  }
 }
