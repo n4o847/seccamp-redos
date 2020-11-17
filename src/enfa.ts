@@ -2,6 +2,9 @@ import { Pattern, Node, CharSet } from 'rerejs';
 import { EpsilonNFA, State, NullableTransition } from './types';
 import { createCharSet } from './char';
 
+/**
+ * Thompson's construction を用いて rerejs.Pattern から ε-NFA を構築する。
+ */
 export function buildEpsilonNFA(pattern: Pattern): EpsilonNFA {
   return new Builder(pattern).build();
 }
@@ -10,7 +13,13 @@ class Builder {
   private stateList: State[] = [];
   private transitions: Map<State, NullableTransition[]> = new Map();
   private stateId = 0;
-  private alphabet: Set<number> = new Set();
+  /**
+   * 構築時に得られた rerejs.CharSet 上の各区間の始端と終端を集める。
+   * これによって Unicode 上の文字を区別するのに十分な（必要とは限らない）区間の分割を得る。
+   * 文字を列挙する際は alphabet[i] <= ch < alphabet[i + 1] であるような ch を
+   * 各 0 <= i < alphabet.length - 1 について列挙して charSet.has(ch) で判定すれば良い。
+   */
+  private partitionPoints: Set<number> = new Set();
 
   constructor(
     private pattern: Pattern,
@@ -18,7 +27,7 @@ class Builder {
 
   build(): EpsilonNFA {
     const { initialState, acceptingState } = this.buildChild(this.pattern.child);
-    const alphabet = Array.from(this.alphabet).sort((a, b) => a - b);
+    const alphabet = Array.from(this.partitionPoints).sort((a, b) => a - b);
     return {
       type: 'EpsilonNFA',
       alphabet,
@@ -139,7 +148,7 @@ class Builder {
   private addTransition(source: State, charSet: CharSet | null, destination: State): void {
     if (charSet !== null) {
       for (const codePoint of charSet.data) {
-        this.alphabet.add(codePoint);
+        this.partitionPoints.add(codePoint);
       }
     }
     this.transitions.get(source)!.push({ charSet, destination });

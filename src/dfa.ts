@@ -2,6 +2,9 @@ import { CharSet } from 'rerejs';
 import { NonEpsilonNFA, UnorderedNFA, DFA, State, NonNullableTransition } from './types';
 import { equals, intersect } from './util';
 
+/**
+ * NFA をリバースする。
+ */
 export function reverseNFA(nfa: NonEpsilonNFA): UnorderedNFA {
   const reversedTransitions = new Map<State, NonNullableTransition[]>();
   for (const q of nfa.stateList) {
@@ -25,6 +28,9 @@ export function reverseNFA(nfa: NonEpsilonNFA): UnorderedNFA {
   };
 }
 
+/**
+ * 部分集合構成法を用いて NFA から DFA を構築する。
+ */
 export function determinize(nfa: UnorderedNFA): DFA {
   return new Determinizer(nfa).determinize();
 }

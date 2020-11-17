@@ -1,6 +1,9 @@
 import { CharSet } from 'rerejs';
 import { EpsilonNFA, NonEpsilonNFA, State, NonNullableTransition } from './types';
 
+/**
+ * ε-NFA から ε-遷移を除去する。
+ */
 export function eliminateEpsilonTransitions(nfa: EpsilonNFA): NonEpsilonNFA {
   return new Eliminator(nfa).eliminate();
 }
@@ -53,6 +56,10 @@ class Eliminator {
     };
   }
 
+  /**
+   * 状態 q から ε-遷移のみをたどっていき、得られる全ての受理状態あるいは ε でない遷移を得る。
+   * 別の経路で得られるものは区別する。また、経路はループを含まない。
+   */
   private buildClosure(q: State, path: State[] = []): ClosureItem[] {
     if (path.includes(q)) {
       return [];
