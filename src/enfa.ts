@@ -145,7 +145,7 @@ class Builder {
   }
 
   private createState(): State {
-    const state = {
+    const state: State = {
       id: `q${this.stateId++}`,
     };
     this.stateList.push(state);

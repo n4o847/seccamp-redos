@@ -97,7 +97,7 @@ class Determinizer {
   }
 
   createState(oldStateSet: Set<State>): State {
-    const state = {
+    const state: State = {
       id: `Q${this.newStateId++}`,
     };
     this.newStateList.push(state);
