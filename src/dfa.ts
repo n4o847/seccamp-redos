@@ -59,7 +59,13 @@ class Determinizer {
       }
       for (let i = 0; i < alphabet.length - 1; i++) {
         const codePointRange: [number, number] = [alphabet[i], alphabet[i + 1]];
-        const qs1 = new Set(Array.from(qs0).flatMap((q) => this.nfa.transitions.get(q)!.filter((d) => d.charSet.has(codePointRange[0])).map((d) => d.destination)));
+        const qs1 = new Set(
+          Array.from(qs0).flatMap((q) =>
+            this.nfa.transitions.get(q)!
+              .filter((d) => d.charSet.has(codePointRange[0]))
+              .map((d) => d.destination)
+          )
+        );
         if (qs1.size === 0) {
           continue;
         }
