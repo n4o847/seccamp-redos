@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "start": "parcel index.html",
-    "build": "parcel build index.html"
+    "build": "parcel build index.html --public-url ./"
   },
   "dependencies": {
     "@types/react": "^16.9.56",
