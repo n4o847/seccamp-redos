@@ -1,7 +1,5 @@
 import { CharSet, FlagSet } from 'rerejs';
-import {
-  Atom,
-} from './types';
+import { Atom } from './types';
 
 export const MAX_CODE_POINT = 0x110000;
 

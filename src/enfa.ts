@@ -1,12 +1,8 @@
-import * as rerejs from 'rerejs';
-import {
-  EpsilonNFA,
-  State,
-  NullableTransition,
-} from './types';
+import { Pattern, Node, CharSet } from 'rerejs';
+import { EpsilonNFA, State, NullableTransition } from './types';
 import { createCharSet } from './char';
 
-export function buildEpsilonNFA(pattern: rerejs.Pattern): EpsilonNFA {
+export function buildEpsilonNFA(pattern: Pattern): EpsilonNFA {
   return new Builder(pattern).build();
 }
 
@@ -17,7 +13,7 @@ class Builder {
   private alphabet: Set<number> = new Set();
 
   constructor(
-    private pattern: rerejs.Pattern,
+    private pattern: Pattern,
   ) {}
 
   build(): EpsilonNFA {
@@ -36,7 +32,7 @@ class Builder {
     };
   }
 
-  private buildChild(node: rerejs.Node): Pick<EpsilonNFA, 'initialState' | 'acceptingState'> {
+  private buildChild(node: Node): Pick<EpsilonNFA, 'initialState' | 'acceptingState'> {
     switch (node.type) {
       case 'Disjunction': {
         const q0 = this.createState();
@@ -143,7 +139,7 @@ class Builder {
     return state;
   }
 
-  private addTransition(source: State, charSet: rerejs.CharSet | null, destination: State): void {
+  private addTransition(source: State, charSet: CharSet | null, destination: State): void {
     if (charSet !== null) {
       for (const codePoint of charSet.data) {
         this.alphabet.add(codePoint);

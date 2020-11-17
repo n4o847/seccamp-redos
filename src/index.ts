@@ -1,4 +1,4 @@
-import * as rerejs from 'rerejs';
+import { Parser } from 'rerejs';
 import { buildEpsilonNFA } from './enfa';
 import { eliminateEpsilonTransitions } from './nfa';
 import { reverseNFA, determinize } from './dfa';
@@ -21,7 +21,7 @@ function main() {
   ];
   for (const src of sources) {
     console.log(`//`, src);
-    const pat = new rerejs.Parser(src).parse();
+    const pat = new Parser(src).parse();
     const enfa = buildEpsilonNFA(pat);
     console.log(toDOT(enfa));
     console.log(`//`, src, `eliminated`);

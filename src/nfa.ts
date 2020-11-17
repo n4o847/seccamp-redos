@@ -1,10 +1,5 @@
 import { CharSet } from 'rerejs';
-import {
-  EpsilonNFA,
-  NonEpsilonNFA,
-  State,
-  NonNullableTransition,
-} from './types';
+import { EpsilonNFA, NonEpsilonNFA, State, NonNullableTransition } from './types';
 
 export function eliminateEpsilonTransitions(nfa: EpsilonNFA): NonEpsilonNFA {
   return new Eliminator(nfa).eliminate();

@@ -1,6 +1,4 @@
-import {
-  Automaton,
-} from './types';
+import { Automaton } from './types';
 import { MAX_CODE_POINT } from './char';
 
 type Edge = {

@@ -1,12 +1,5 @@
 import { CharSet } from 'rerejs';
-import {
-  NonEpsilonNFA,
-  UnorderedNFA,
-  DFA,
-  State,
-  NonNullableTransition,
-  CharSetTransition,
-} from './types';
+import { NonEpsilonNFA, UnorderedNFA, DFA, State, NonNullableTransition } from './types';
 import { equals, intersect } from './util';
 
 export function reverseNFA(nfa: NonEpsilonNFA): UnorderedNFA {
@@ -38,7 +31,7 @@ export function determinize(nfa: UnorderedNFA): DFA {
 
 class Determinizer {
   private newStateList: State[] = [];
-  private newTransitions: Map<State, CharSetTransition[]> = new Map();
+  private newTransitions: Map<State, NonNullableTransition[]> = new Map();
   private newStateToOldStateSet: Map<State, Set<State>> = new Map();
   private newStateId = 0;
 

@@ -1,4 +1,4 @@
-import * as rerejs from 'rerejs';
+import { Char, EscapeClass, Class, Dot, CharSet } from 'rerejs';
 
 export type Automaton =
   | EpsilonNFA
@@ -39,7 +39,7 @@ export type DFA = {
   stateList: State[];
   initialState: State;
   acceptingStateSet: Set<State>;
-  transitions: Map<State, CharSetTransition[]>;
+  transitions: Map<State, NonNullableTransition[]>;
 };
 
 export type State = {
@@ -47,26 +47,21 @@ export type State = {
 };
 
 export type Atom =
-  | rerejs.Char
-  | rerejs.EscapeClass
-  | rerejs.Class
-  | rerejs.Dot;
+  | Char
+  | EscapeClass
+  | Class
+  | Dot;
 
 export type Transition =
   | NullableTransition
   | NonNullableTransition;
 
 export type NullableTransition = {
-  charSet: rerejs.CharSet | null;
+  charSet: CharSet | null;
   destination: State;
 };
 
 export type NonNullableTransition = {
-  charSet: rerejs.CharSet;
-  destination: State;
-};
-
-export type CharSetTransition = {
-  charSet: rerejs.CharSet;
+  charSet: CharSet;
   destination: State;
 };
