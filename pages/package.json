@@ -1,0 +1,19 @@
+{
+  "name": "pages",
+  "private": true,
+  "scripts": {
+    "start": "parcel index.html",
+    "build": "parcel build index.html"
+  },
+  "dependencies": {
+    "@types/react": "^16.9.56",
+    "@types/react-dom": "^16.9.9",
+    "@types/viz.js": "^2.1.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "viz.js": "^2.1.2"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.12.4"
+  }
+}
