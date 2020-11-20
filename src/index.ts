@@ -38,8 +38,10 @@ function main() {
     console.log(`//`, src, `strongly connected components`);
     const sccs = buildStronglyConnectedComponents(nfa);
     console.log(`//`, src, `direct product`);
-    buildDirectProductNFAs(sccs);
-    // console.log(toDOT(dp));
+    const dps = buildDirectProductNFAs(sccs);
+    for (const dp of dps) {
+      console.log(toDOT(dp));
+    }
     console.log(`//`, src, `reversed`);
     const rnfa = reverseNFA(nfa);
     console.log(toDOT(rnfa));

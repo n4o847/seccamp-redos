@@ -10,14 +10,8 @@ import { intersect } from './util';
 
 export function buildDirectProductNFAs(
   sccs: StronglyConnectedComponentNFA[],
-): void {
-  const dps = sccs.map((scc) => buildDirectProductNFA(scc));
-
-  console.log(dps.length);
-
-  for (const dp of dps) {
-    console.log(dp);
-  }
+): DirectProductNFA[] {
+  return sccs.map((scc) => buildDirectProductNFA(scc));
 }
 
 export function buildDirectProductNFA(

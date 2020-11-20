@@ -1,6 +1,12 @@
 import { Char, EscapeClass, Class, Dot, CharSet } from 'rerejs';
 
-export type Automaton = EpsilonNFA | NonEpsilonNFA | UnorderedNFA | DFA;
+export type Automaton =
+  | EpsilonNFA
+  | NonEpsilonNFA
+  | UnorderedNFA
+  | DFA
+  | StronglyConnectedComponentNFA
+  | DirectProductNFA;
 
 export type EpsilonNFA = {
   type: 'EpsilonNFA';
