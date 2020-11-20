@@ -4,6 +4,7 @@ import { Atom } from './types';
 export const MAX_CODE_POINT = 0x110000;
 
 const digit = new CharSet();
+// 0x30: 0, 0x39: 9
 digit.add(0x30, 0x39 + 1);
 
 const invertDigit = digit.clone().invert();
@@ -76,4 +77,20 @@ export function createCharSet(node: Atom, flagSet: FlagSet): CharSet {
       return dot;
     }
   }
+}
+
+export function enumerateCharset(charSet: CharSet): Set<number> {
+  const enumSet: Set<number> = new Set();
+
+  for (let i = 0; i < charSet.data.length - 1; i += 2) {
+    const len = charSet.data[i + 1] - charSet.data[i];
+    [...new Array(len)]
+      .map((_, j) => {
+        return charSet.data[i] + j;
+      })
+      .forEach((v) => {
+        enumSet.add(v);
+      });
+  }
+  return enumSet;
 }

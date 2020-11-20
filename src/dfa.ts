@@ -1,5 +1,11 @@
 import { CharSet } from 'rerejs';
-import { NonEpsilonNFA, UnorderedNFA, DFA, State, NonNullableTransition } from './types';
+import {
+  NonEpsilonNFA,
+  UnorderedNFA,
+  DFA,
+  State,
+  NonNullableTransition,
+} from './types';
 import { equals, intersect } from './util';
 
 /**
@@ -41,9 +47,7 @@ class Determinizer {
   private newStateToOldStateSet: Map<State, Set<State>> = new Map();
   private newStateId = 0;
 
-  constructor(
-    private nfa: UnorderedNFA,
-  ) {}
+  constructor(private nfa: UnorderedNFA) {}
 
   determinize(): DFA {
     const queue: State[] = [];
@@ -57,15 +61,18 @@ class Determinizer {
       if (intersect(qs0, this.nfa.acceptingStateSet).size !== 0) {
         newAcceptingStateSet.add(q0);
       }
+      console.log(alphabet);
       for (let i = 0; i < alphabet.length - 1; i++) {
         const codePointRange: [number, number] = [alphabet[i], alphabet[i + 1]];
         const qs1 = new Set(
           Array.from(qs0).flatMap((q) =>
-            this.nfa.transitions.get(q)!
+            this.nfa.transitions
+              .get(q)!
               .filter((d) => d.charSet.has(codePointRange[0]))
-              .map((d) => d.destination)
-          )
+              .map((d) => d.destination),
+          ),
         );
+
         if (qs1.size === 0) {
           continue;
         }
@@ -106,7 +113,11 @@ class Determinizer {
     return state;
   }
 
-  addTransition(source: State, codePointRange: [number, number], destination: State): void {
+  addTransition(
+    source: State,
+    codePointRange: [number, number],
+    destination: State,
+  ): void {
     for (const d of this.newTransitions.get(source)!) {
       if (d.destination === destination) {
         d.charSet.add(codePointRange[0], codePointRange[1]);
