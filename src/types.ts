@@ -31,6 +31,7 @@ export type StronglyConnectedComponentNFA = {
   stateList: State[];
   transitions: Map<State, NonNullableTransition[]>;
 };
+
 export type DirectProductNFA = {
   type: 'DirectProductNFA';
   stateList: State[];

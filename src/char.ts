@@ -4,7 +4,6 @@ import { Atom } from './types';
 export const MAX_CODE_POINT = 0x110000;
 
 const digit = new CharSet();
-// 0x30: 0, 0x39: 9
 digit.add(0x30, 0x39 + 1);
 
 const invertDigit = digit.clone().invert();

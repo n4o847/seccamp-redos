@@ -42,7 +42,6 @@ function main() {
     }
     console.log(`//`, src, `has EDA?: `, hasEDA(dps));
     console.log(`//`, src, `reversed`);
-    console.log(`//`, src, `reversed`);
     const rnfa = reverseNFA(nfa);
     console.log(toDOT(rnfa));
     console.log(`//`, src, `determinized`);
