@@ -3,9 +3,12 @@ import { buildEpsilonNFA } from './enfa';
 import { eliminateEpsilonTransitions } from './nfa';
 import { reverseNFA, determinize } from './dfa';
 import { toDOT } from './viz';
-import { buildDirectProductNFA } from './scc';
+import { buildDirectProductNFAs } from './directProduct';
+import { buildStronglyConnectedComponents } from './scc';
 
 function main() {
+  const sources = [String.raw`(\w|\d)*`];
+  /*
   const sources = [
     String.raw`a`,
     String.raw`\s`,
@@ -22,6 +25,7 @@ function main() {
     String.raw`(.*)="(.*)"`,
     String.raw`[a-z][0-9a-z]*`,
   ];
+  */
 
   for (const src of sources) {
     console.log(`//`, src);
@@ -31,17 +35,17 @@ function main() {
     console.log(`//`, src, `eliminated`);
     const nfa = eliminateEpsilonTransitions(enfa);
     console.log(toDOT(nfa));
-    const dp = buildDirectProductNFA(nfa);
-    console.log(toDOT(dp));
-    /*
+    console.log(`//`, src, `strongly connected components`);
+    const sccs = buildStronglyConnectedComponents(nfa);
+    console.log(`//`, src, `direct product`);
+    buildDirectProductNFAs(sccs);
+    // console.log(toDOT(dp));
     console.log(`//`, src, `reversed`);
     const rnfa = reverseNFA(nfa);
     console.log(toDOT(rnfa));
     console.log(`//`, src, `determinized`);
     const dfa = determinize(rnfa);
-    console.log(dfa.transitions);
     console.log(toDOT(dfa));
-    */
   }
 }
 

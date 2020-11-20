@@ -27,8 +27,6 @@ export function toDOT(
         return false;
       case 'DFA':
         return false;
-      case 'DirectProductNFA':
-        return false;
     }
   })();
   const edges: Edge[] = [];

@@ -1,122 +1,109 @@
-import { CharSet } from 'rerejs';
 import {
   NonEpsilonNFA,
-  DirectProductNFA,
-  State,
   NonNullableTransition,
+  State,
+  StronglyConnectedComponentNFA,
 } from './types';
-import { enumerateCharset } from './char';
-import { intersect } from './util';
 
-export function buildDirectProductNFA(nfa: NonEpsilonNFA): DirectProductNFA {
-  return new DirectProducer(nfa).build();
+export function buildStronglyConnectedComponents(
+  nfa: NonEpsilonNFA,
+): StronglyConnectedComponentNFA[] {
+  return new StronglyConnectedComponents(nfa).build();
 }
 
-class DirectProducer {
-  private newStateList: State[] = [];
-  private newTransitions: Map<State, NonNullableTransition[]> = new Map();
-  private newStateToOldStateSet: Map<State, [State, State]> = new Map();
-  private newStateId = 0;
+class StronglyConnectedComponents {
+  private reverseTransitions: Map<State, NonNullableTransition[]> = new Map();
+  private used: Map<State, boolean> = new Map();
+  private order: State[] = [];
+  private comp: Map<State, number> = new Map();
+  private sccList: StronglyConnectedComponentNFA[] = [];
 
   constructor(private nfa: NonEpsilonNFA) {}
 
-  /**
-   * 強連結成分を持つ部分グラフを受け取る
-   * 初期状態は存在しない(transitionsとstateListのみでいいのか)
-   */
-  build(): DirectProductNFA {
-    // 全てのstateを一度作る(直積)
-    // もとのtransitionsから辺を張る
+  build(): StronglyConnectedComponentNFA[] {
+    this.nfa.stateList.forEach((state) => {
+      this.used.set(state, false);
+      this.comp.set(state, -1);
+      this.reverseTransitions.set(state, []);
+    });
 
-    for (const ls of this.nfa.stateList) {
-      for (const rs of this.nfa.stateList) {
-        this.createState([ls, rs]);
+    for (const [q, ds] of this.nfa.transitions) {
+      for (const d of ds) {
+        this.reverseTransitions
+          .get(d.destination)!
+          .push({ charSet: d.charSet, destination: q });
       }
     }
-    const initialState = this.getState(
-      this.nfa.initialState,
-      this.nfa.initialState,
-    )!;
 
-    for (const [lq, lds] of this.nfa.transitions) {
-      for (const ld of lds) {
-        for (const [rq, rds] of this.nfa.transitions) {
-          for (const rd of rds) {
-            // arrayをキーにすると参照で検索してしまう
-            let source = this.getState(lq, rq);
-            if (source === null) {
-              source = this.createState([lq, rq]);
-            }
+    for (const state of this.nfa.stateList) {
+      this.dfs(state);
+    }
 
-            let dest = this.getState(ld.destination, rd.destination);
-            if (dest === null) {
-              dest = this.createState([ld.destination, rd.destination]);
-            }
+    let ptr = 0;
+    const reversedOrder = this.order.reverse();
 
-            // 全列挙して積集合を取る
-            const le = enumerateCharset(ld.charSet);
-            const re = enumerateCharset(rd.charSet);
-            const lre = Array.from(intersect(le, re)).sort((a, b) => a - b);
+    for (const state of reversedOrder) {
+      if (this.comp.get(state)! === -1) {
+        this.rdfs(state, ptr);
+        ptr++;
+      }
+    }
 
-            if (lre.length > 0) {
-              const data = [];
-              data.push(lre[0]);
-              for (let i = 0; i < lre.length - 1; i++) {
-                if (lre[i + 1] - lre[i] > 1) {
-                  data.push(lre[i] + 1);
-                  data.push(lre[i + 1]);
-                }
-              }
-              data.push(lre[lre.length - 1] + 1);
-
-              const charSet = new CharSet(data);
-              this.addTransition(source, charSet, dest);
-            }
+    for (const sccNFA of this.sccList) {
+      for (const state of sccNFA.stateList) {
+        for (const tr of this.nfa.transitions.get(state)!) {
+          if (this.comp.get(state) === this.comp.get(tr.destination)) {
+            sccNFA.transitions.get(state)!.push(tr);
           }
         }
       }
     }
 
-    return {
-      type: 'DirectProductNFA',
-      alphabet: this.nfa.alphabet,
-      stateList: this.newStateList,
-      initialState: initialState,
-      acceptingStateSet: new Set([initialState]),
-      transitions: this.newTransitions,
-    };
-  }
-
-  getState(leftState: State, rightState: State): State | null {
-    for (const [ns, os] of this.newStateToOldStateSet) {
-      if (os[0] === leftState && os[1] == rightState) {
-        return ns;
+    // Logger(後で消す)
+    /*
+    for (const scc of this.sccList) {
+      console.log(scc);
+      for (const [s, dd] of scc.transitions) {
+        console.log(s);
+        for (const d of dd) {
+          console.log(s, d.destination, d.charSet);
+        }
       }
     }
-    return null;
-  }
-
-  createState(oldStateTuple: [State, State]): State {
-    /*
-    const state: State = {
-      id: `dp${this.newStateId++}`,
-    };
     */
-    const state: State = {
-      id: `${oldStateTuple[0].id}${oldStateTuple[1].id}`,
-    };
 
-    this.newStateList.push(state);
-    this.newTransitions.set(state, []);
-    this.newStateToOldStateSet.set(state, oldStateTuple);
-    return state;
+    return this.sccList;
   }
 
-  private addTransition(
-    source: State,
-    charSet: CharSet,
-    destination: State,
-  ): void {
-    this.newTransitions.get(source)!.push({ charSet, destination });
+  private dfs(state: State): void {
+    if (this.used.get(state)!) return;
+    this.used.set(state, true);
+    for (const tr of this.nfa.transitions.get(state)!) {
+      this.dfs(tr.destination);
+    }
+    this.order.push(state);
+  }
+
+  private rdfs(state: State, cnt: number): void {
+    if (this.comp.get(state)! !== -1) return;
+
+    this.comp.set(state, cnt);
+
+    if (cnt === this.sccList.length) {
+      this.sccList.push({
+        type: 'StronglyConnectedComponentNFA',
+        stateList: [],
+        transitions: new Map(),
+      });
+    }
+
+    const sccNFA = this.sccList[cnt];
+    sccNFA.stateList.push(state);
+    sccNFA.transitions.set(state, []);
+
+    // 同じ強連結成分同士の集合を作る
+    for (const rt of this.reverseTransitions.get(state)!) {
+      this.rdfs(rt.destination, cnt);
+    }
   }
 }

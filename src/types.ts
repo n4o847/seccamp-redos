@@ -1,11 +1,6 @@
 import { Char, EscapeClass, Class, Dot, CharSet } from 'rerejs';
 
-export type Automaton =
-  | EpsilonNFA
-  | NonEpsilonNFA
-  | UnorderedNFA
-  | DFA
-  | DirectProductNFA;
+export type Automaton = EpsilonNFA | NonEpsilonNFA | UnorderedNFA | DFA;
 
 export type EpsilonNFA = {
   type: 'EpsilonNFA';
@@ -25,12 +20,14 @@ export type NonEpsilonNFA = {
   transitions: Map<State, NonNullableTransition[]>;
 };
 
+export type StronglyConnectedComponentNFA = {
+  type: 'StronglyConnectedComponentNFA';
+  stateList: State[];
+  transitions: Map<State, NonNullableTransition[]>;
+};
 export type DirectProductNFA = {
   type: 'DirectProductNFA';
-  alphabet: number[];
   stateList: State[];
-  initialState: State;
-  acceptingStateSet: Set<State>;
   transitions: Map<State, NonNullableTransition[]>;
 };
 

@@ -61,7 +61,6 @@ class Determinizer {
       if (intersect(qs0, this.nfa.acceptingStateSet).size !== 0) {
         newAcceptingStateSet.add(q0);
       }
-      console.log(alphabet);
       for (let i = 0; i < alphabet.length - 1; i++) {
         const codePointRange: [number, number] = [alphabet[i], alphabet[i + 1]];
         const qs1 = new Set(
