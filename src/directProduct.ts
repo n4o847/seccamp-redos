@@ -20,6 +20,14 @@ export function buildDirectProductNFA(
   return new DirectProducer(sccNFA).build();
 }
 
+export function getLeftString(state: State): string {
+  return state.id.slice(0, 2);
+}
+
+export function getRightString(state: State): string {
+  return state.id.slice(-2);
+}
+
 class DirectProducer {
   private newStateList: State[] = [];
   private newTransitions: Map<State, NonNullableTransition[]> = new Map();
@@ -33,12 +41,6 @@ class DirectProducer {
         this.createState(ls, rs);
       }
     }
-    /*
-    const initialState = this.getState(
-      this.sccNFA.initialState,
-      this.sccNFA.initialState,
-    )!;
-    */
 
     for (const [lq, lds] of this.sccNFA.transitions) {
       for (const ld of lds) {

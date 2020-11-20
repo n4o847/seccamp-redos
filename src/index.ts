@@ -5,10 +5,9 @@ import { reverseNFA, determinize } from './dfa';
 import { toDOT } from './viz';
 import { buildDirectProductNFAs } from './directProduct';
 import { buildStronglyConnectedComponents } from './scc';
+import { hasEDA } from './eda';
 
 function main() {
-  const sources = [String.raw`(\w|\d)*`];
-  /*
   const sources = [
     String.raw`a`,
     String.raw`\s`,
@@ -25,7 +24,6 @@ function main() {
     String.raw`(.*)="(.*)"`,
     String.raw`[a-z][0-9a-z]*`,
   ];
-  */
 
   for (const src of sources) {
     console.log(`//`, src);
@@ -42,6 +40,8 @@ function main() {
     for (const dp of dps) {
       console.log(toDOT(dp));
     }
+    console.log(`//`, src, `has EDA?: `, hasEDA(dps));
+    console.log(`//`, src, `reversed`);
     console.log(`//`, src, `reversed`);
     const rnfa = reverseNFA(nfa);
     console.log(toDOT(rnfa));

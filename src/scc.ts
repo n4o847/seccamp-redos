@@ -59,19 +59,6 @@ class StronglyConnectedComponents {
       }
     }
 
-    // Logger(後で消す)
-    /*
-    for (const scc of this.sccList) {
-      console.log(scc);
-      for (const [s, dd] of scc.transitions) {
-        console.log(s);
-        for (const d of dd) {
-          console.log(s, d.destination, d.charSet);
-        }
-      }
-    }
-    */
-
     return this.sccList;
   }
 
