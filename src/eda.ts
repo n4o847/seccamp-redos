@@ -7,7 +7,7 @@ import { DirectProductNFA, Message } from './types';
 export function showMessageEDA(dps: DirectProductNFA[]): Message {
   // 別の経路で同じ文字で移動して自身に戻れたらEDA
   if (dps.some((dp) => isEDA(dp))) {
-    return { state: 'Vulnerable', message: 'Ditected EDA.' };
+    return { state: 'Vulnerable', message: 'Detected EDA.' };
   } else {
     return { state: 'Safe', message: "Don't have EDA." };
   }
