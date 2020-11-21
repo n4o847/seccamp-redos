@@ -1,56 +1,23 @@
 import { Parser } from 'rerejs';
-import { buildEpsilonNFA } from './enfa';
-import { eliminateEpsilonTransitions } from './nfa';
-import { reverseNFA, determinize } from './dfa';
-import { toDOT } from './viz';
 import { buildDirectProductNFAs } from './directProduct';
+import { showMessageEDA } from './eda';
+import { buildEpsilonNFA, eliminateEpsilonTransitions } from './lib';
 import { buildStronglyConnectedComponents } from './scc';
-import { hasEDA } from './eda';
+import { Message } from './types';
 
-function main() {
-  const sources: [source: string, flags?: string][] = [
-    [String.raw`a`],
-    [String.raw`\s`],
-    [String.raw`a|b`],
-    [String.raw`ab`],
-    [String.raw`a*`],
-    [String.raw`a*?`],
-    [String.raw`(?:)`],
-    [String.raw`(?:a|bc)`],
-    [String.raw`(a*)*`],
-    [String.raw`(a+)+`],
-    [String.raw`(a?)?`],
-    [String.raw`(\w|\d)*`],
-    [String.raw`(.*)="(.*)"`],
-    [String.raw`[a-z][0-9a-z]*`],
-    [String.raw`a[a-z]`, 'i'],
-  ];
-
-  for (const [src, flags] of sources) {
-    console.log(`//`, src, flags);
+export function detectEDA(src: string, flags?: string): Message {
+  try {
     const pat = new Parser(src, flags).parse();
     const enfa = buildEpsilonNFA(pat);
-    console.log(toDOT(enfa));
-    console.log(`//`, src, `eliminated`);
     const nfa = eliminateEpsilonTransitions(enfa);
-    console.log(toDOT(nfa));
-    console.log(`//`, src, `strongly connected components`);
     const sccs = buildStronglyConnectedComponents(nfa);
-    console.log(`//`, src, `direct product`);
     const dps = buildDirectProductNFAs(sccs);
-    for (const dp of dps) {
-      console.log(toDOT(dp));
+    return showMessageEDA(dps);
+  } catch (e) {
+    if (e instanceof Error) {
+      return { state: 'Error', message: e.message };
+    } else {
+      return { state: 'Error', message: 'Undefined Error.' };
     }
-    console.log(`//`, src, `has EDA?: `, hasEDA(dps));
-    console.log(`//`, src, `reversed`);
-    const rnfa = reverseNFA(nfa);
-    console.log(toDOT(rnfa));
-    console.log(`//`, src, `determinized`);
-    const dfa = determinize(rnfa);
-    console.log(toDOT(dfa));
   }
-}
-
-if (require.main === module) {
-  main();
 }

@@ -1,12 +1,16 @@
 import { getLeftString, getRightString } from './directProduct';
-import { DirectProductNFA } from './types';
+import { DirectProductNFA, Message } from './types';
 
 /**
- * 強連結成分を一つ一つ見ていき、一つでもEDA経路があったらtrueを返す。
+ * 強連結成分を一つ一つ見ていき、EDAを持つかメッセージを返す
  */
-export function hasEDA(dps: DirectProductNFA[]): boolean {
+export function showMessageEDA(dps: DirectProductNFA[]): Message {
   // 別の経路で同じ文字で移動して自身に戻れたらEDA
-  return dps.some((dp) => isEDA(dp));
+  if (dps.some((dp) => isEDA(dp))) {
+    return { state: 'Vulnerable', message: 'Detected EDA.' };
+  } else {
+    return { state: 'Safe', message: "Don't have EDA." };
+  }
 }
 
 function isEDA(dp: DirectProductNFA): boolean {
