@@ -21,12 +21,12 @@ class Builder {
    */
   private partitionPoints: Set<number> = new Set();
 
-  constructor(
-    private pattern: Pattern,
-  ) {}
+  constructor(private pattern: Pattern) {}
 
   build(): EpsilonNFA {
-    const { initialState, acceptingState } = this.buildChild(this.pattern.child);
+    const { initialState, acceptingState } = this.buildChild(
+      this.pattern.child,
+    );
     const alphabet = Array.from(this.partitionPoints).sort((a, b) => a - b);
     return {
       type: 'EpsilonNFA',
@@ -44,7 +44,9 @@ class Builder {
    * - 初期状態 q への遷移は持たない。
    * - 受理状態 f からの遷移は持たない。
    */
-  private buildChild(node: Node): Pick<EpsilonNFA, 'initialState' | 'acceptingState'> {
+  private buildChild(
+    node: Node,
+  ): Pick<EpsilonNFA, 'initialState' | 'acceptingState'> {
     switch (node.type) {
       case 'Disjunction': {
         const q0 = this.createState();
@@ -71,7 +73,9 @@ class Builder {
             acceptingState: f0,
           };
         } else {
-          const childNFAs = node.children.map((child) => this.buildChild(child));
+          const childNFAs = node.children.map((child) =>
+            this.buildChild(child),
+          );
           for (let i = 0; i < childNFAs.length - 1; i++) {
             const f1 = childNFAs[i].acceptingState;
             const q2 = childNFAs[i + 1].initialState;
@@ -101,15 +105,15 @@ class Builder {
         const q1 = childNFA.initialState;
         const f1 = childNFA.acceptingState;
         if (node.nonGreedy) {
-          if (!some)     this.addTransition(q0, null, f0);
-                         this.addTransition(q0, null, q1);
-                         this.addTransition(f1, null, f0);
+          if (!some) this.addTransition(q0, null, f0);
+          this.addTransition(q0, null, q1);
+          this.addTransition(f1, null, f0);
           if (!optional) this.addTransition(f1, null, q1);
         } else {
-                         this.addTransition(q0, null, q1);
-          if (!some)     this.addTransition(q0, null, f0);
+          this.addTransition(q0, null, q1);
+          if (!some) this.addTransition(q0, null, f0);
           if (!optional) this.addTransition(f1, null, q1);
-                         this.addTransition(f1, null, f0);
+          this.addTransition(f1, null, f0);
         }
         return {
           initialState: q0,
@@ -153,7 +157,11 @@ class Builder {
     return state;
   }
 
-  private addTransition(source: State, charSet: CharSet | null, destination: State): void {
+  private addTransition(
+    source: State,
+    charSet: CharSet | null,
+    destination: State,
+  ): void {
     if (charSet !== null) {
       for (const codePoint of charSet.data) {
         this.partitionPoints.add(codePoint);

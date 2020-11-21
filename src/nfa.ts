@@ -1,5 +1,10 @@
 import { CharSet } from 'rerejs';
-import { EpsilonNFA, NonEpsilonNFA, State, NonNullableTransition } from './types';
+import {
+  EpsilonNFA,
+  NonEpsilonNFA,
+  State,
+  NonNullableTransition,
+} from './types';
 
 /**
  * ε-NFA から ε-遷移を除去する。
@@ -8,21 +13,21 @@ export function eliminateEpsilonTransitions(nfa: EpsilonNFA): NonEpsilonNFA {
   return new Eliminator(nfa).eliminate();
 }
 
-type ClosureItem = {
-  accepting: true;
-} | {
-  accepting: false;
-  charSet: CharSet;
-  destination: State;
-};
+type ClosureItem =
+  | {
+      accepting: true;
+    }
+  | {
+      accepting: false;
+      charSet: CharSet;
+      destination: State;
+    };
 
 class Eliminator {
   private newStateList: State[] = [];
   private newTransitions: Map<State, NonNullableTransition[]> = new Map();
 
-  constructor(
-    private nfa: EpsilonNFA,
-  ) {}
+  constructor(private nfa: EpsilonNFA) {}
 
   eliminate(): NonEpsilonNFA {
     const queue = [];
@@ -70,7 +75,13 @@ class Eliminator {
         if (d.charSet === null) {
           return this.buildClosure(d.destination, [...path, q]);
         } else {
-          return [{ accepting: false, charSet: d.charSet, destination: d.destination }];
+          return [
+            {
+              accepting: false,
+              charSet: d.charSet,
+              destination: d.destination,
+            },
+          ];
         }
       });
     }
@@ -81,7 +92,11 @@ class Eliminator {
     this.newTransitions.set(oldState, []);
   }
 
-  private addTransition(source: State, charSet: CharSet, destination: State): void {
+  private addTransition(
+    source: State,
+    charSet: CharSet,
+    destination: State,
+  ): void {
     this.newTransitions.get(source)!.push({ charSet, destination });
   }
 }

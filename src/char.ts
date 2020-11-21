@@ -77,3 +77,19 @@ export function createCharSet(node: Atom, flagSet: FlagSet): CharSet {
     }
   }
 }
+
+export function enumerateCharset(charSet: CharSet): Set<number> {
+  const enumSet: Set<number> = new Set();
+
+  for (let i = 0; i < charSet.data.length - 1; i += 2) {
+    const len = charSet.data[i + 1] - charSet.data[i];
+    [...new Array(len)]
+      .map((_, j) => {
+        return charSet.data[i] + j;
+      })
+      .forEach((v) => {
+        enumSet.add(v);
+      });
+  }
+  return enumSet;
+}

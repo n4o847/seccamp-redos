@@ -3,6 +3,9 @@ import { buildEpsilonNFA } from './enfa';
 import { eliminateEpsilonTransitions } from './nfa';
 import { reverseNFA, determinize } from './dfa';
 import { toDOT } from './viz';
+import { buildDirectProductNFAs } from './directProduct';
+import { buildStronglyConnectedComponents } from './scc';
+import { hasEDA } from './eda';
 
 function main() {
   const sources = [
@@ -21,6 +24,7 @@ function main() {
     String.raw`(.*)="(.*)"`,
     String.raw`[a-z][0-9a-z]*`,
   ];
+
   for (const src of sources) {
     console.log(`//`, src);
     const pat = new Parser(src).parse();
@@ -29,6 +33,14 @@ function main() {
     console.log(`//`, src, `eliminated`);
     const nfa = eliminateEpsilonTransitions(enfa);
     console.log(toDOT(nfa));
+    console.log(`//`, src, `strongly connected components`);
+    const sccs = buildStronglyConnectedComponents(nfa);
+    console.log(`//`, src, `direct product`);
+    const dps = buildDirectProductNFAs(sccs);
+    for (const dp of dps) {
+      console.log(toDOT(dp));
+    }
+    console.log(`//`, src, `has EDA?: `, hasEDA(dps));
     console.log(`//`, src, `reversed`);
     const rnfa = reverseNFA(nfa);
     console.log(toDOT(rnfa));

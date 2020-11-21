@@ -4,7 +4,9 @@ export type Automaton =
   | EpsilonNFA
   | NonEpsilonNFA
   | UnorderedNFA
-  | DFA;
+  | DFA
+  | StronglyConnectedComponentNFA
+  | DirectProductNFA;
 
 export type EpsilonNFA = {
   type: 'EpsilonNFA';
@@ -21,6 +23,18 @@ export type NonEpsilonNFA = {
   stateList: State[];
   initialState: State;
   acceptingStateSet: Set<State>;
+  transitions: Map<State, NonNullableTransition[]>;
+};
+
+export type StronglyConnectedComponentNFA = {
+  type: 'StronglyConnectedComponentNFA';
+  stateList: State[];
+  transitions: Map<State, NonNullableTransition[]>;
+};
+
+export type DirectProductNFA = {
+  type: 'DirectProductNFA';
+  stateList: State[];
   transitions: Map<State, NonNullableTransition[]>;
 };
 
@@ -46,15 +60,9 @@ export type State = {
   id: string;
 };
 
-export type Atom =
-  | Char
-  | EscapeClass
-  | Class
-  | Dot;
+export type Atom = Char | EscapeClass | Class | Dot;
 
-export type Transition =
-  | NullableTransition
-  | NonNullableTransition;
+export type Transition = NullableTransition | NonNullableTransition;
 
 export type NullableTransition = {
   charSet: CharSet | null;
