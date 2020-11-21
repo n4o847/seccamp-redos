@@ -1,12 +1,12 @@
 import {
-  NonEpsilonNFA,
   NonNullableTransition,
+  SCCPossibleAutomaton,
   State,
   StronglyConnectedComponentNFA,
 } from './types';
 
 export function buildStronglyConnectedComponents(
-  nfa: NonEpsilonNFA,
+  nfa: SCCPossibleAutomaton,
 ): StronglyConnectedComponentNFA[] {
   return new StronglyConnectedComponents(nfa).build();
 }
@@ -18,7 +18,7 @@ class StronglyConnectedComponents {
   private comp: Map<State, number> = new Map();
   private sccList: StronglyConnectedComponentNFA[] = [];
 
-  constructor(private nfa: NonEpsilonNFA) {}
+  constructor(private nfa: SCCPossibleAutomaton) {}
 
   build(): StronglyConnectedComponentNFA[] {
     this.nfa.stateList.forEach((state) => {
