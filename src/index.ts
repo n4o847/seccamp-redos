@@ -5,7 +5,7 @@ import { reverseNFA, determinize } from './dfa';
 import { toDOT } from './viz';
 import { buildDirectProductNFAs } from './directProduct';
 import { buildStronglyConnectedComponents } from './scc';
-import { hasEDA } from './eda';
+import { showMessageEDA } from './eda';
 
 function main() {
   const sources = [
@@ -40,7 +40,7 @@ function main() {
     for (const dp of dps) {
       console.log(toDOT(dp));
     }
-    console.log(`//`, src, `has EDA?: `, hasEDA(dps));
+    console.log(`//`, src, `has EDA?: `, showMessageEDA(dps));
     console.log(`//`, src, `reversed`);
     const rnfa = reverseNFA(nfa);
     console.log(toDOT(rnfa));
