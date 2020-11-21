@@ -2,7 +2,7 @@
   "name": "thompson",
   "private": true,
   "scripts": {
-    "start": "ts-node src/index.ts"
+    "test": "ts-node src/test.ts"
   },
   "dependencies": {
     "rerejs": "^0.2.0"
