@@ -19,7 +19,7 @@ function isEDA(dp: DirectProductNFA): boolean {
   return sccs.some((scc) => {
     // Setがもとの二重辺の配列よりサイズが小さくなれば二重辺が存在
     for (const source of scc.stateList) {
-      const loopBackStr = scc.transitions
+      const loopBackStringArray = scc.transitions
         .get(source)!
         .filter((tr) => {
           return source === tr.destination;
@@ -27,9 +27,9 @@ function isEDA(dp: DirectProductNFA): boolean {
         .map((tr) => {
           return tr.charSet.toString();
         });
-      const loopBackSet = new Set(Array.from(loopBackStr));
+      const loopBackSet = new Set(loopBackStringArray);
 
-      if (loopBackSet.size < loopBackStr.length) {
+      if (loopBackSet.size < loopBackStringArray.length) {
         return true;
       }
     }
