@@ -4,6 +4,10 @@
     "module": "commonjs",
     "downlevelIteration": true,
     "strict": true,
-    "moduleResolution": "node"
-  }
+    "moduleResolution": "node",
+    "declaration": true,
+    "rootDir": "./src",
+    "outDir": "./lib"
+  },
+  "include": ["src/**/*"]
 }

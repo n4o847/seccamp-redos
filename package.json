@@ -1,8 +1,12 @@
 {
   "name": "thompson",
   "private": true,
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
-    "test": "ts-node src/test.ts"
+    "build": "tsc -p .",
+    "test": "ts-node src/test.ts",
+    "prepare": "npm run build"
   },
   "dependencies": {
     "rerejs": "^0.2.0"
