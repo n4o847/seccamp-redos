@@ -30,7 +30,11 @@ export function createCharSet(node: Atom, flagSet: FlagSet): CharSet {
   switch (node.type) {
     case 'Char': {
       const charSet = new CharSet();
-      charSet.add(node.value, node.value + 1);
+      let value = node.value;
+      if (flagSet.ignoreCase) {
+        value = canonicalize(node.value);
+      }
+      charSet.add(value, value + 1);
       return charSet;
     }
     case 'EscapeClass': {
@@ -62,7 +66,16 @@ export function createCharSet(node: Atom, flagSet: FlagSet): CharSet {
             break;
           }
           case 'ClassRange': {
-            charSet.add(child.children[0].value, child.children[1].value + 1);
+            const begin = child.children[0].value;
+            const end = child.children[1].value + 1;
+            if (flagSet.ignoreCase) {
+              for (let value = begin; value < end; value++) {
+                const canonicalizedValue = canonicalize(value);
+                charSet.add(canonicalizedValue, canonicalizedValue + 1);
+              }
+            } else {
+              charSet.add(begin, end);
+            }
             break;
           }
         }
@@ -76,6 +89,10 @@ export function createCharSet(node: Atom, flagSet: FlagSet): CharSet {
       return dot;
     }
   }
+}
+
+export function canonicalize(value: number): number {
+  return String.fromCharCode(value).toUpperCase().charCodeAt(0);
 }
 
 export function enumerateCharset(charSet: CharSet): Set<number> {
