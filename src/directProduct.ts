@@ -21,11 +21,11 @@ export function buildDirectProductNFA(
 }
 
 export function getLeftString(state: State): string {
-  return state.id.split(',')[0];
+  return state.id.split('_')[0];
 }
 
 export function getRightString(state: State): string {
-  return state.id.split(',')[1];
+  return state.id.split('_')[1];
 }
 
 class DirectProducer {
@@ -99,7 +99,7 @@ class DirectProducer {
   // 直積は前の状態をスペース区切りに
   createState(leftState: State, rightState: State): State {
     const state: State = {
-      id: `${leftState.id},${rightState.id}`,
+      id: `${leftState.id}_${rightState.id}`,
     };
 
     this.newStateList.push(state);
