@@ -73,3 +73,8 @@ export type NonNullableTransition = {
   charSet: CharSet;
   destination: State;
 };
+
+export type Message = {
+  state: 'Safe' | 'Vulnerable' | 'Error';
+  message: string;
+};
