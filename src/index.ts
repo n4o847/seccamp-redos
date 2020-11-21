@@ -15,9 +15,9 @@ export function detectEDA(src: string, flags?: string): Message {
     return showMessageEDA(dps);
   } catch (e) {
     if (e instanceof Error) {
-      return { state: 'Error', message: e.message };
+      return { status: 'Error', message: e.message };
     } else {
-      return { state: 'Error', message: 'Undefined Error.' };
+      return { status: 'Error', message: 'Undefined Error.' };
     }
   }
 }

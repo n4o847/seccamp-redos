@@ -75,6 +75,6 @@ export type NonNullableTransition = {
 };
 
 export type Message = {
-  state: 'Safe' | 'Vulnerable' | 'Error';
+  status: 'Safe' | 'Vulnerable' | 'Error';
   message: string;
 };
