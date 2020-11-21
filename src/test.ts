@@ -8,25 +8,26 @@ import { buildStronglyConnectedComponents } from './scc';
 import { showMessageEDA } from './eda';
 
 function main() {
-  const sources = [
-    String.raw`a`,
-    String.raw`\s`,
-    String.raw`a|b`,
-    String.raw`ab`,
-    String.raw`a*`,
-    String.raw`a*?`,
-    String.raw`(?:)`,
-    String.raw`(?:a|bc)`,
-    String.raw`(a*)*`,
-    String.raw`(a+)+`,
-    String.raw`(a?)?`,
-    String.raw`(\w|\d)*`,
-    String.raw`(.*)="(.*)"`,
-    String.raw`[a-z][0-9a-z]*`,
+  const sources: [source: string, flags?: string][] = [
+    [String.raw`a`],
+    [String.raw`\s`],
+    [String.raw`a|b`],
+    [String.raw`ab`],
+    [String.raw`a*`],
+    [String.raw`a*?`],
+    [String.raw`(?:)`],
+    [String.raw`(?:a|bc)`],
+    [String.raw`(a*)*`],
+    [String.raw`(a+)+`],
+    [String.raw`(a?)?`],
+    [String.raw`(\w|\d)*`],
+    [String.raw`(.*)="(.*)"`],
+    [String.raw`[a-z][0-9a-z]*`],
+    [String.raw`a[a-z]`, 'i'],
   ];
 
-  for (const src of sources) {
-    console.log(`//`, src);
+  for (const [src, flags] of sources) {
+    console.log(`//`, src, flags);
     const pat = new Parser(src).parse();
     const enfa = buildEpsilonNFA(pat);
     console.log(toDOT(enfa));
