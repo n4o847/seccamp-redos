@@ -21,11 +21,11 @@ export function buildDirectProductNFA(
 }
 
 export function getLeftString(state: State): string {
-  return state.id.slice(0, 2);
+  return state.id.split(',')[0];
 }
 
 export function getRightString(state: State): string {
-  return state.id.slice(-2);
+  return state.id.split(',')[1];
 }
 
 class DirectProducer {
@@ -46,7 +46,6 @@ class DirectProducer {
       for (const ld of lds) {
         for (const [rq, rds] of this.sccNFA.transitions) {
           for (const rd of rds) {
-            // arrayをキーにすると参照で検索してしまう
             let source = this.getState(lq, rq);
             if (source === null) {
               source = this.createState(lq, rq);
@@ -97,9 +96,10 @@ class DirectProducer {
     return null;
   }
 
+  // 直積は前の状態をスペース区切りに
   createState(leftState: State, rightState: State): State {
     const state: State = {
-      id: `${leftState.id}${rightState.id}`,
+      id: `${leftState.id},${rightState.id}`,
     };
 
     this.newStateList.push(state);
