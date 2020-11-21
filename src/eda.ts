@@ -27,9 +27,9 @@ function isEDA(dp: DirectProductNFA): boolean {
         .map((tr) => {
           return tr.charSet.toString();
         });
-      const loopBackSet = new Set(loopBackStringArray);
+      const loopBackStringSet = new Set(loopBackStringArray);
 
-      if (loopBackSet.size < loopBackStringArray.length) {
+      if (loopBackStringSet.size < loopBackStringArray.length) {
         return true;
       }
     }
