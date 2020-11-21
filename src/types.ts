@@ -8,6 +8,8 @@ export type Automaton =
   | StronglyConnectedComponentNFA
   | DirectProductNFA;
 
+export type SCCPossibleAutomaton = NonEpsilonNFA | DirectProductNFA;
+
 export type EpsilonNFA = {
   type: 'EpsilonNFA';
   alphabet: number[];

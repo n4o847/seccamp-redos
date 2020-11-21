@@ -1,4 +1,5 @@
 import { getLeftString, getRightString } from './directProduct';
+import { buildStronglyConnectedComponents } from './scc';
 import { DirectProductNFA, Message } from './types';
 
 /**
@@ -14,12 +15,29 @@ export function showMessageEDA(dps: DirectProductNFA[]): Message {
 }
 
 function isEDA(dp: DirectProductNFA): boolean {
-  // 別の点に同じ文字w1で遷移できてかつ同じ文字w2で自分に戻れるか判定する
-  const lrSame = dp.stateList.filter(
-    (state) => getLeftString(state) === getRightString(state),
-  );
-  const lrDifferent = dp.stateList.filter(
-    (state) => getLeftString(state) !== getRightString(state),
-  );
-  return lrSame.length > 0 && lrDifferent.length > 0;
+  const sccs = buildStronglyConnectedComponents(dp);
+  return sccs.some((scc) => {
+    // Setがもとの二重辺の配列よりサイズが小さくなれば二重辺が存在
+    for (const source of scc.stateList) {
+      const loopBackStr = scc.transitions
+        .get(source)!
+        .filter((tr) => {
+          return source === tr.destination;
+        })
+        .map((tr) => {
+          return tr.charSet.toString();
+        });
+      const loopBackSet = new Set(Array.from(loopBackStr));
+
+      if (loopBackSet.size < loopBackStr.length) {
+        return true;
+      }
+    }
+
+    const lrSame = scc.stateList.filter(
+      (state) => getLeftString(state) === getRightString(state),
+    );
+    // (n, n), (m, k) (m !== k)が存在(すべて同じじゃないが全て異なるわけではない)
+    return lrSame.length < scc.stateList.length && lrSame.length > 0;
+  });
 }
