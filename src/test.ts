@@ -17,6 +17,7 @@ function main() {
     [String.raw`a*?`],
     [String.raw`(?:)`],
     [String.raw`(?:a|bc)`],
+    [String.raw`(a|b)*`],
     [String.raw`(a*)*`],
     [String.raw`(a+)+`],
     [String.raw`(a?)?`],
