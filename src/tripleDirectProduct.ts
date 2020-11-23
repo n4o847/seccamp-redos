@@ -1,6 +1,7 @@
 import { CharSet } from 'rerejs';
 import {
 	TripleDirectProductNFA,
+	SCCPossibleAutomaton,
 	State,
 	NonNullableTransition,
 	StronglyConnectedComponentNFA,
@@ -10,14 +11,20 @@ import { intersect } from './util';
 
 export function buildTripleDirectProductNFAs(
 	sccs: StronglyConnectedComponentNFA[],
+	nfa: SCCPossibleAutomaton,
 ): TripleDirectProductNFA[] {
-	return sccs.map((scc) => buildTripleDirectProductNFA(scc));
+	return sccs.map((scc1, index, sccs) => 
+		sccs.filter(scc2 => scc1 !== scc2)
+		.map(scc2 => buildTripleDirectProductNFA(scc1, scc2, nfa)
+	)).flat(1);
 }
 
 export function buildTripleDirectProductNFA(
-	sccNFA: StronglyConnectedComponentNFA,
+	sccNFA1: StronglyConnectedComponentNFA,
+	sccNFA2: StronglyConnectedComponentNFA,
+	nfa: SCCPossibleAutomaton,
 ): TripleDirectProductNFA {
-	return new TripleDirectProducer(sccNFA).build();
+	return new TripleDirectProducer(sccNFA1, sccNFA2, nfa).build();
 }
 
 export function getLeftString(state: State): string {
@@ -31,24 +38,81 @@ export function getRightString(state: State): string {
 class TripleDirectProducer {
   private newStateList: State[] = [];
   private newTransitions: Map<State, NonNullableTransition[]> = new Map();
-  private newStateToOldStateSet: Map<State, [State, State, State]> = new Map();
+	private newStateToOldStateSet: Map<State, [State, State, State]> = new Map();
+	private extraTransitions: Map<State, NonNullableTransition[]> = new Map();
 
-	constructor(private sccNFA: StronglyConnectedComponentNFA) {}
+	constructor(
+		private sccNFA1: StronglyConnectedComponentNFA,
+		private sccNFA2: StronglyConnectedComponentNFA,
+		private nfa: SCCPossibleAutomaton,
+	) {}
 
 	build(): TripleDirectProductNFA {
-		for (const ls of this.sccNFA.stateList) {
-			for (const cs of this.sccNFA.stateList) {
-				for (const rs of this.sccNFA.stateList) {
-					this.createState(ls, cs, rs);
+		// 強連結成分scc1, scc2間のTransitionsを取得する
+		const betweenTransitionsSCC: Map<State, NonNullableTransition[]> = new Map();
+		for (const s1 of this.sccNFA1.stateList) {
+			for (const s1t of this.nfa.transitions.get(s1)!) {
+				if(this.sccNFA2.stateList.some(dest => dest.id === s1t.destination.id)){
+					if(betweenTransitionsSCC.get(s1)! === undefined)
+						betweenTransitionsSCC.set(s1, []);
+					betweenTransitionsSCC.get(s1)!.push(s1t);
+				}
+			}
+		}
+		for (const s2 of this.sccNFA2.stateList) {
+			for (const s2t of this.sccNFA2.transitions.get(s2)!) {
+				if(this.sccNFA1.stateList.some(dest => dest.id === s2t.destination.id)){
+					if(betweenTransitionsSCC.get(s2)! === undefined)
+						betweenTransitionsSCC.set(s2, []);
+					betweenTransitionsSCC.get(s2)!.push(s2t);
 				}
 			}
 		}
 
-		for (const [lq, lds] of this.sccNFA.transitions) {
+		// 後々のループのネストを浅くするため、2つのsccNFAの和集合を作る
+		const sumOfTwoSccStateList: Set<State> = new Set();
+		for (const s1 of this.sccNFA1.stateList) {
+			sumOfTwoSccStateList.add(s1);
+		}
+		for (const s2 of this.sccNFA2.stateList) {
+			sumOfTwoSccStateList.add(s2);
+		}
+		for (const ls of sumOfTwoSccStateList) {
+			for (const cs of sumOfTwoSccStateList) {
+				for (const rs of sumOfTwoSccStateList) {
+					this.createState(ls, cs, rs);
+				}
+			}
+		}
+		
+		const sumOfTwoSccTransitions: Map<State, NonNullableTransition[]> = new Map();
+		for (const [q, ds] of this.sccNFA1.transitions) {
+			for (const d of ds) {
+				if(sumOfTwoSccTransitions.get(q)! === undefined)
+					sumOfTwoSccTransitions.set(q, []);
+				sumOfTwoSccTransitions.get(q)!.push(d);
+			}
+		} 
+		for (const [q, ds] of this.sccNFA2.transitions) {
+			for (const d of ds) {
+				if(sumOfTwoSccTransitions.get(q)! === undefined)
+					sumOfTwoSccTransitions.set(q, []);
+				sumOfTwoSccTransitions.get(q)!.push(d);
+			}
+		} 
+		for (const [q, ds] of betweenTransitionsSCC) {
+			for (const d of ds) {
+				if(sumOfTwoSccTransitions.get(q)! === undefined)
+					sumOfTwoSccTransitions.set(q, []);
+				sumOfTwoSccTransitions.get(q)!.push(d);
+			}
+		}
+
+		for (const [lq, lds] of sumOfTwoSccTransitions) {
 			for (const ld of lds) {
-				for (const [cq, cds] of this.sccNFA.transitions) {
+				for (const [cq, cds] of sumOfTwoSccTransitions) {
 					for (const cd of cds) {
-						for (const [rq, rds] of this.sccNFA.transitions) {
+						for (const [rq, rds] of sumOfTwoSccTransitions) {
 							for (const rd of rds) {
 								let source = this.getState(lq, cq, rq);
 								if(source === null) {
@@ -71,7 +135,7 @@ class TripleDirectProducer {
 									const data = [];
 									
 									data.push(lcre[0]);
-									// 連続した文字コード列を１つにまとめる
+									// 連続した文字コード数字列を１つにまとめる
 									for (let i = 0; i < lcre.length - 1; i++) {
 										if (lcre[i + 1] - lcre[i] > 1) {
 										data.push(lcre[i] + 1);
@@ -89,11 +153,35 @@ class TripleDirectProducer {
 				}
 			}
 		}
+		
+		// IDA判定のために、強連結成分間の戻る辺を追加
+		for (const [s, dests] of betweenTransitionsSCC) {
+			for (const d of dests) {
+				let exs = this.getState(s, d.destination, d.destination);
+				if(exs === null) {
+					exs = this.createState(s, d.destination, d.destination);
+				}
+
+				let exd = this.getState(s, s, d.destination);
+				if(exd === null) {
+					exd = this.createState(s, s, d.destination);
+				}
+
+				this.newTransitions.get(
+					[...this.newTransitions.keys()].filter(nt => nt.id === exs!.id)[0]
+				)!.push({charSet: d.charSet, destination: exd});
+
+				if(this.extraTransitions.get(exs)! === undefined)
+					this.extraTransitions.set(exs, []);
+				this.extraTransitions.get(exs)!.push({charSet: d.charSet, destination: exd});
+			};
+		}
 
 		return {
 			type: 'TripleDirectProductNFA',
 			stateList: this.newStateList,
 			transitions: this.newTransitions,
+			extraTransitions: this.extraTransitions,
 		}
 	}
 
