@@ -5,7 +5,7 @@ export function showMessageIDA(tdps: TripleDirectProductNFA[]): Message {
   if (tdps.some((tdp) => isIDA(tdp))) {
     return { status: 'Vulnerable', message: 'Detected IDA.' };
   } else {
-    return { status: 'Safe', message: 'Don\'t have IDA.' };
+    return { status: 'Safe', message: "Don't have IDA." };
   }
 }
 
@@ -16,9 +16,9 @@ function isIDA(tdp: TripleDirectProductNFA): boolean {
 
     for (const [q, ts] of tdp.extraTransitions) {
       for (const t of ts) {
-        return scc.transitions.get(t.destination)?.some(
-          (scc_dest) => scc_dest.destination === q
-        );
+        return scc.transitions
+          .get(t.destination)
+          ?.some((scc_dest) => scc_dest.destination === q);
       }
     }
     return false;

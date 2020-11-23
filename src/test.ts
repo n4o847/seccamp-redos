@@ -6,7 +6,10 @@ import { toDOT } from './viz';
 import { buildDirectProductNFAs } from './directProduct';
 import { buildStronglyConnectedComponents } from './scc';
 import { showMessageEDA } from './eda';
-import { buildTripleDirectProductNFA, buildTripleDirectProductNFAs } from './tripleDirectProduct';
+import {
+  buildTripleDirectProductNFA,
+  buildTripleDirectProductNFAs,
+} from './tripleDirectProduct';
 import { showMessageIDA } from './ida';
 
 function main() {
