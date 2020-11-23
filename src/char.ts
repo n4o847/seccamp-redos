@@ -110,3 +110,12 @@ export function enumerateCharset(charSet: CharSet): Set<number> {
   }
   return enumSet;
 }
+
+export function intersectCharSets(...charSets: CharSet[]): CharSet {
+  const intersection = new CharSet();
+  for (const cs of charSets) {
+    intersection.addCharSet(cs.clone().invert());
+  }
+  intersection.invert();
+  return intersection;
+}
