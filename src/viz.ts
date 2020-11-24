@@ -27,7 +27,7 @@ export function toDOT(
         return false;
       case 'StronglyConnectedComponentNFA':
         return false;
-      case 'DirectProductNFA':
+      case 'DirectProductGraph':
         return false;
       case 'DFA':
         return false;
@@ -53,8 +53,8 @@ export function toDOT(
 
   switch (automaton.type) {
     case 'StronglyConnectedComponentNFA':
-    case 'DirectProductNFA':
-    case 'TripleDirectProductNFA':
+    case 'DirectProductGraph':
+    case 'TripleDirectProductGraph':
       break;
     default: {
       const acceptingStateSet =

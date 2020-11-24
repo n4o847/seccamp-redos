@@ -1,22 +1,22 @@
 import { CharSet } from 'rerejs';
 import {
-  DirectProductNFA,
+  DirectProductGraph,
   State,
   NonNullableTransition,
   StronglyConnectedComponentNFA,
 } from './types';
 import { intersectCharSets } from './char';
 
-export function buildDirectProductNFAs(
+export function buildDirectProductGraphs(
   sccs: StronglyConnectedComponentNFA[],
-): DirectProductNFA[] {
-  return sccs.map((scc) => buildDirectProductNFA(scc));
+): DirectProductGraph[] {
+  return sccs.map((scc) => buildDirectProductGraph(scc));
 }
 
-export function buildDirectProductNFA(
+export function buildDirectProductGraph(
   sccNFA: StronglyConnectedComponentNFA,
-): DirectProductNFA {
-  return new DirectProducer(sccNFA).build();
+): DirectProductGraph {
+  return new DirectProductBuilder(sccNFA).build();
 }
 
 export function getLeftState(state: State): State {
@@ -27,14 +27,14 @@ export function getRightState(state: State): State {
   return state.split('_')[1] as State;
 }
 
-class DirectProducer {
+class DirectProductBuilder {
   private newStateList: State[] = [];
   private newTransitions: Map<State, NonNullableTransition[]> = new Map();
   private newStateToOldStateSet: Map<State, [State, State]> = new Map();
 
   constructor(private sccNFA: StronglyConnectedComponentNFA) {}
 
-  build(): DirectProductNFA {
+  build(): DirectProductGraph {
     for (const ls of this.sccNFA.stateList) {
       for (const rs of this.sccNFA.stateList) {
         this.createState(ls, rs);
@@ -63,7 +63,7 @@ class DirectProducer {
     }
 
     return {
-      type: 'DirectProductNFA',
+      type: 'DirectProductGraph',
       stateList: this.newStateList,
       transitions: this.newTransitions,
     };

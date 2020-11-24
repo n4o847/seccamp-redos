@@ -3,13 +3,10 @@ import { buildEpsilonNFA } from './enfa';
 import { eliminateEpsilonTransitions } from './nfa';
 import { reverseNFA, determinize } from './dfa';
 import { toDOT } from './viz';
-import { buildDirectProductNFAs } from './directProduct';
+import { buildDirectProductGraphs } from './directProduct';
 import { buildStronglyConnectedComponents } from './scc';
 import { showMessageEDA } from './eda';
-import {
-  buildTripleDirectProductNFA,
-  buildTripleDirectProductNFAs,
-} from './tripleDirectProduct';
+import { buildTripleDirectProductGraphs } from './tripleDirectProduct';
 import { showMessageIDA } from './ida';
 
 function main() {
@@ -44,13 +41,13 @@ function main() {
     console.log(`//`, src, `strongly connected components`);
     const sccs = buildStronglyConnectedComponents(nfa);
     console.log(`//`, src, `direct product`);
-    const dps = buildDirectProductNFAs(sccs);
+    const dps = buildDirectProductGraphs(sccs);
     for (const dp of dps) {
       console.log(toDOT(dp));
     }
     console.log(`//`, src, `has EDA?: `, showMessageEDA(dps));
     console.log('//', src, `triple direct product`);
-    const tdps = buildTripleDirectProductNFAs(sccs, nfa);
+    const tdps = buildTripleDirectProductGraphs(sccs, nfa);
     console.log(`//`, src, `has IDA?: `, showMessageIDA(tdps));
     console.log(`//`, src, `reversed`);
     const rnfa = reverseNFA(nfa);

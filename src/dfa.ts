@@ -38,10 +38,10 @@ export function reverseNFA(nfa: NonEpsilonNFA): UnorderedNFA {
  * 部分集合構成法を用いて NFA から DFA を構築する。
  */
 export function determinize(nfa: UnorderedNFA): DFA {
-  return new Determinizer(nfa).determinize();
+  return new DFABuilder(nfa).build();
 }
 
-class Determinizer {
+class DFABuilder {
   private newStateList: State[] = [];
   private newTransitions: Map<State, NonNullableTransition[]> = new Map();
   private newStateToOldStateSet: Map<State, Set<State>> = new Map();
@@ -49,7 +49,7 @@ class Determinizer {
 
   constructor(private nfa: UnorderedNFA) {}
 
-  determinize(): DFA {
+  build(): DFA {
     const queue: State[] = [];
     const alphabet = this.nfa.alphabet;
     const newInitialState = this.createState(this.nfa.initialStateSet);

@@ -6,10 +6,10 @@ import { createCharSet } from './char';
  * Thompson's construction を用いて rerejs.Pattern から ε-NFA を構築する。
  */
 export function buildEpsilonNFA(pattern: Pattern): EpsilonNFA {
-  return new Builder(pattern).build();
+  return new EpsilonNFABuilder(pattern).build();
 }
 
-class Builder {
+class EpsilonNFABuilder {
   private stateList: State[] = [];
   private transitions: Map<State, NullableTransition[]> = new Map();
   private stateId = 0;
@@ -105,14 +105,22 @@ class Builder {
         const q1 = childNFA.initialState;
         const f1 = childNFA.acceptingState;
         if (node.nonGreedy) {
-          if (!some) this.addTransition(q0, null, f0);
+          if (!some) {
+            this.addTransition(q0, null, f0);
+          }
           this.addTransition(q0, null, q1);
           this.addTransition(f1, null, f0);
-          if (!optional) this.addTransition(f1, null, q1);
+          if (!optional) {
+            this.addTransition(f1, null, q1);
+          }
         } else {
           this.addTransition(q0, null, q1);
-          if (!some) this.addTransition(q0, null, f0);
-          if (!optional) this.addTransition(f1, null, q1);
+          if (!some) {
+            this.addTransition(q0, null, f0);
+          }
+          if (!optional) {
+            this.addTransition(f1, null, q1);
+          }
           this.addTransition(f1, null, f0);
         }
         return {
