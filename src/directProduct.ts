@@ -1,21 +1,21 @@
 import { CharSet } from 'rerejs';
 import {
-  DirectProductNFA,
+  DirectProductGraph,
   State,
   NonNullableTransition,
   StronglyConnectedComponentNFA,
 } from './types';
 import { intersectCharSets } from './char';
 
-export function buildDirectProductNFAs(
+export function buildDirectProductGraphs(
   sccs: StronglyConnectedComponentNFA[],
-): DirectProductNFA[] {
-  return sccs.map((scc) => buildDirectProductNFA(scc));
+): DirectProductGraph[] {
+  return sccs.map((scc) => buildDirectProductGraph(scc));
 }
 
-export function buildDirectProductNFA(
+export function buildDirectProductGraph(
   sccNFA: StronglyConnectedComponentNFA,
-): DirectProductNFA {
+): DirectProductGraph {
   return new DirectProducer(sccNFA).build();
 }
 
@@ -34,7 +34,7 @@ class DirectProducer {
 
   constructor(private sccNFA: StronglyConnectedComponentNFA) {}
 
-  build(): DirectProductNFA {
+  build(): DirectProductGraph {
     for (const ls of this.sccNFA.stateList) {
       for (const rs of this.sccNFA.stateList) {
         this.createState(ls, rs);
@@ -63,7 +63,7 @@ class DirectProducer {
     }
 
     return {
-      type: 'DirectProductNFA',
+      type: 'DirectProductGraph',
       stateList: this.newStateList,
       transitions: this.newTransitions,
     };

@@ -1,11 +1,11 @@
 import { getLeftString, getRightString } from './directProduct';
 import { buildStronglyConnectedComponents } from './scc';
-import { DirectProductNFA, Message } from './types';
+import { DirectProductGraph, Message } from './types';
 
 /**
  * 強連結成分を一つ一つ見ていき、EDAを持つかメッセージを返す
  */
-export function showMessageEDA(dps: DirectProductNFA[]): Message {
+export function showMessageEDA(dps: DirectProductGraph[]): Message {
   // 別の経路で同じ文字で移動して自身に戻れたらEDA
   if (dps.some((dp) => isEDA(dp))) {
     return { status: 'Vulnerable', message: 'Detected EDA.' };
@@ -14,7 +14,7 @@ export function showMessageEDA(dps: DirectProductNFA[]): Message {
   }
 }
 
-function isEDA(dp: DirectProductNFA): boolean {
+function isEDA(dp: DirectProductGraph): boolean {
   const sccs = buildStronglyConnectedComponents(dp);
   return sccs.some((scc) => {
     // Setがもとの二重辺の配列よりサイズが小さくなれば二重辺が存在

@@ -1,5 +1,5 @@
 import { Parser } from 'rerejs';
-import { buildDirectProductNFAs } from './directProduct';
+import { buildDirectProductGraphs } from './directProduct';
 import { showMessageEDA } from './eda';
 import { buildEpsilonNFA, eliminateEpsilonTransitions } from './lib';
 import { buildStronglyConnectedComponents } from './scc';
@@ -11,7 +11,7 @@ export function detectEDA(src: string, flags?: string): Message {
     const enfa = buildEpsilonNFA(pat);
     const nfa = eliminateEpsilonTransitions(enfa);
     const sccs = buildStronglyConnectedComponents(nfa);
-    const dps = buildDirectProductNFAs(sccs);
+    const dps = buildDirectProductGraphs(sccs);
     return showMessageEDA(dps);
   } catch (e) {
     if (e instanceof Error) {

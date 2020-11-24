@@ -1,31 +1,31 @@
 import { CharSet } from 'rerejs';
 import { intersectCharSets } from './char';
 import {
-  TripleDirectProductNFA,
+  TripleDirectProductGraph,
   SCCPossibleAutomaton,
   State,
   NonNullableTransition,
   StronglyConnectedComponentNFA,
 } from './types';
 
-export function buildTripleDirectProductNFAs(
+export function buildTripleDirectProductGraphs(
   sccs: StronglyConnectedComponentNFA[],
   nfa: SCCPossibleAutomaton,
-): TripleDirectProductNFA[] {
+): TripleDirectProductGraph[] {
   return sccs
     .map((scc1, _, sccs) =>
       sccs
         .filter((scc2) => scc1 !== scc2)
-        .map((scc2) => buildTripleDirectProductNFA(scc1, scc2, nfa)),
+        .map((scc2) => buildTripleDirectProductGraph(scc1, scc2, nfa)),
     )
     .flat(1);
 }
 
-export function buildTripleDirectProductNFA(
+export function buildTripleDirectProductGraph(
   sccNFA1: StronglyConnectedComponentNFA,
   sccNFA2: StronglyConnectedComponentNFA,
   nfa: SCCPossibleAutomaton,
-): TripleDirectProductNFA {
+): TripleDirectProductGraph {
   return new TripleDirectProducer(sccNFA1, sccNFA2, nfa).build();
 }
 
@@ -41,7 +41,7 @@ class TripleDirectProducer {
     private nfa: SCCPossibleAutomaton,
   ) {}
 
-  build(): TripleDirectProductNFA {
+  build(): TripleDirectProductGraph {
     // 強連結成分scc1, scc2間のTransitionsを取得する
     const betweenTransitionsSCC: Map<
       State,
@@ -193,7 +193,7 @@ class TripleDirectProducer {
     }
 
     return {
-      type: 'TripleDirectProductNFA',
+      type: 'TripleDirectProductGraph',
       stateList: this.newStateList,
       transitions: this.newTransitions,
       extraTransitions: this.extraTransitions,
