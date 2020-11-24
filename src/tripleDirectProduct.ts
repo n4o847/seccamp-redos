@@ -6,8 +6,10 @@ import {
   NonNullableTransition,
   StronglyConnectedComponentNFA,
 } from './types';
-import { enumerateCharset } from './char';
-import { intersect } from './util';
+import { 
+  enumerateCharset,
+  intersectCharSets
+} from './char';
 
 export function buildTripleDirectProductNFAs(
   sccs: StronglyConnectedComponentNFA[],
@@ -150,31 +152,8 @@ class TripleDirectProducer {
                   );
                 }
 
-                // 積集合をとる
-                const le = enumerateCharset(ld.charSet);
-                const ce = enumerateCharset(cd.charSet);
-                const re = enumerateCharset(rd.charSet);
-
-                const lcre = Array.from(intersect(le, intersect(ce, re))).sort(
-                  (a, b) => a - b,
-                );
-
-                if (lcre.length > 0) {
-                  const data = [];
-
-                  data.push(lcre[0]);
-                  // 連続した文字コード数字列を１つにまとめる
-                  for (let i = 0; i < lcre.length - 1; i++) {
-                    if (lcre[i + 1] - lcre[i] > 1) {
-                      data.push(lcre[i] + 1);
-                      data.push(lcre[i + 1]);
-                    }
-                  }
-                  data.push(lcre[lcre.length - 1] + 1);
-
-                  const charSet = new CharSet(data);
-                  this.addTransition(source, charSet, dest);
-                }
+                const lcre = intersectCharSets(ld.charSet, cd.charSet, rd.charSet);
+                this.addTransition(source, lcre, dest);
               }
             }
           }
