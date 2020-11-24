@@ -6,6 +6,11 @@ import { toDOT } from './viz';
 import { buildDirectProductNFAs } from './directProduct';
 import { buildStronglyConnectedComponents } from './scc';
 import { showMessageEDA } from './eda';
+import {
+  buildTripleDirectProductNFA,
+  buildTripleDirectProductNFAs,
+} from './tripleDirectProduct';
+import { showMessageIDA } from './ida';
 
 function main() {
   const sources: [source: string, flags?: string][] = [
@@ -25,6 +30,7 @@ function main() {
     [String.raw`(.*)="(.*)"`],
     [String.raw`[a-z][0-9a-z]*`],
     [String.raw`a[a-z]`, 'i'],
+    [String.raw`a*a*`], // IDA典型例
   ];
 
   for (const [src, flags] of sources) {
@@ -43,6 +49,9 @@ function main() {
       console.log(toDOT(dp));
     }
     console.log(`//`, src, `has EDA?: `, showMessageEDA(dps));
+    console.log('//', src, `triple direct product`);
+    const tdps = buildTripleDirectProductNFAs(sccs, nfa);
+    console.log(`//`, src, `has IDA?: `, showMessageIDA(tdps));
     console.log(`//`, src, `reversed`);
     const rnfa = reverseNFA(nfa);
     console.log(toDOT(rnfa));

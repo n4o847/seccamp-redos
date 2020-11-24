@@ -54,6 +54,7 @@ export function toDOT(
   switch (automaton.type) {
     case 'StronglyConnectedComponentNFA':
     case 'DirectProductNFA':
+    case 'TripleDirectProductNFA':
       break;
     default: {
       const acceptingStateSet =

@@ -6,9 +6,13 @@ export type Automaton =
   | UnorderedNFA
   | DFA
   | StronglyConnectedComponentNFA
-  | DirectProductNFA;
+  | DirectProductNFA
+  | TripleDirectProductNFA;
 
-export type SCCPossibleAutomaton = NonEpsilonNFA | DirectProductNFA;
+export type SCCPossibleAutomaton =
+  | NonEpsilonNFA
+  | DirectProductNFA
+  | TripleDirectProductNFA;
 
 export type EpsilonNFA = {
   type: 'EpsilonNFA';
@@ -38,6 +42,13 @@ export type DirectProductNFA = {
   type: 'DirectProductNFA';
   stateList: State[];
   transitions: Map<State, NonNullableTransition[]>;
+};
+
+export type TripleDirectProductNFA = {
+  type: 'TripleDirectProductNFA';
+  stateList: State[];
+  transitions: Map<State, NonNullableTransition[]>;
+  extraTransitions: Map<State, NonNullableTransition[]>;
 };
 
 export type UnorderedNFA = {
