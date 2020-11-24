@@ -5,8 +5,7 @@ import {
   NonNullableTransition,
   StronglyConnectedComponentNFA,
 } from './types';
-import { enumerateCharset } from './char';
-import { intersect } from './util';
+import { intersectCharSets } from './char';
 
 export function buildDirectProductNFAs(
   sccs: StronglyConnectedComponentNFA[],
@@ -56,25 +55,8 @@ class DirectProducer {
               dest = this.createState(ld.destination, rd.destination);
             }
 
-            // 全列挙して積集合を取る
-            const le = enumerateCharset(ld.charSet);
-            const re = enumerateCharset(rd.charSet);
-            const lre = Array.from(intersect(le, re)).sort((a, b) => a - b);
-
-            if (lre.length > 0) {
-              const data = [];
-              data.push(lre[0]);
-              for (let i = 0; i < lre.length - 1; i++) {
-                if (lre[i + 1] - lre[i] > 1) {
-                  data.push(lre[i] + 1);
-                  data.push(lre[i + 1]);
-                }
-              }
-              data.push(lre[lre.length - 1] + 1);
-
-              const charSet = new CharSet(data);
-              this.addTransition(source, charSet, dest);
-            }
+            const lrCharSet = intersectCharSets(ld.charSet, rd.charSet);
+            this.addTransition(source, lrCharSet, dest);
           }
         }
       }

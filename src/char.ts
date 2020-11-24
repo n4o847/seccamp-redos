@@ -95,6 +95,16 @@ export function canonicalize(value: number): number {
   return String.fromCharCode(value).toUpperCase().charCodeAt(0);
 }
 
+export function intersectCharSets(...charSets: CharSet[]): CharSet {
+  const intersection = new CharSet();
+  for (const cs of charSets) {
+    intersection.addCharSet(cs.clone().invert());
+  }
+  intersection.invert();
+  return intersection;
+}
+
+// WARNING: 複数のCharSetのdataの積集合を取る場合, intersectCharSets関数利用を推奨
 export function enumerateCharset(charSet: CharSet): Set<number> {
   const enumSet: Set<number> = new Set();
 
@@ -109,13 +119,4 @@ export function enumerateCharset(charSet: CharSet): Set<number> {
       });
   }
   return enumSet;
-}
-
-export function intersectCharSets(...charSets: CharSet[]): CharSet {
-  const intersection = new CharSet();
-  for (const cs of charSets) {
-    intersection.addCharSet(cs.clone().invert());
-  }
-  intersection.invert();
-  return intersection;
 }
