@@ -26,10 +26,10 @@ export function buildTripleDirectProductGraph(
   sccNFA2: StronglyConnectedComponentNFA,
   nfa: SCCPossibleAutomaton,
 ): TripleDirectProductGraph {
-  return new TripleDirectProducer(sccNFA1, sccNFA2, nfa).build();
+  return new TripleDirectProductBuilder(sccNFA1, sccNFA2, nfa).build();
 }
 
-class TripleDirectProducer {
+class TripleDirectProductBuilder {
   private newStateList: State[] = [];
   private newTransitions: Map<State, NonNullableTransition[]> = new Map();
   private newStateToOldStateSet: Map<State, [State, State, State]> = new Map();

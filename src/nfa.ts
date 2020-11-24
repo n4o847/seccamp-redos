@@ -10,7 +10,7 @@ import {
  * ε-NFA から ε-遷移を除去する。
  */
 export function eliminateEpsilonTransitions(nfa: EpsilonNFA): NonEpsilonNFA {
-  return new Eliminator(nfa).eliminate();
+  return new EpsilonEliminatedNFABuilder(nfa).build();
 }
 
 type ClosureItem =
@@ -23,13 +23,13 @@ type ClosureItem =
       destination: State;
     };
 
-class Eliminator {
+class EpsilonEliminatedNFABuilder {
   private newStateList: State[] = [];
   private newTransitions: Map<State, NonNullableTransition[]> = new Map();
 
   constructor(private nfa: EpsilonNFA) {}
 
-  eliminate(): NonEpsilonNFA {
+  build(): NonEpsilonNFA {
     const queue = [];
     const newInitialState = this.nfa.initialState;
     const newAcceptingStateSet = new Set<State>();

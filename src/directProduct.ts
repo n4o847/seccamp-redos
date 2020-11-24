@@ -16,7 +16,7 @@ export function buildDirectProductGraphs(
 export function buildDirectProductGraph(
   sccNFA: StronglyConnectedComponentNFA,
 ): DirectProductGraph {
-  return new DirectProducer(sccNFA).build();
+  return new DirectProductBuilder(sccNFA).build();
 }
 
 export function getLeftString(state: State): string {
@@ -27,7 +27,7 @@ export function getRightString(state: State): string {
   return state.id.split('_')[1];
 }
 
-class DirectProducer {
+class DirectProductBuilder {
   private newStateList: State[] = [];
   private newTransitions: Map<State, NonNullableTransition[]> = new Map();
   private newStateToOldStateSet: Map<State, [State, State]> = new Map();
