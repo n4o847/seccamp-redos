@@ -69,9 +69,7 @@ export type DFA = {
   transitions: Map<State, NonNullableTransition[]>;
 };
 
-export type State = {
-  id: string;
-};
+export type State = string & { __stateBrand: never };
 
 export type Atom = Char | EscapeClass | Class | Dot;
 

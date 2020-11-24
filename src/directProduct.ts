@@ -19,12 +19,12 @@ export function buildDirectProductNFA(
   return new DirectProducer(sccNFA).build();
 }
 
-export function getLeftString(state: State): string {
-  return state.id.split('_')[0];
+export function getLeftState(state: State): State {
+  return state.split('_')[0] as State;
 }
 
-export function getRightString(state: State): string {
-  return state.id.split('_')[1];
+export function getRightState(state: State): State {
+  return state.split('_')[1] as State;
 }
 
 class DirectProducer {
@@ -80,9 +80,7 @@ class DirectProducer {
 
   // 直積は前の状態をスペース区切りに
   createState(leftState: State, rightState: State): State {
-    const state: State = {
-      id: `${leftState.id}_${rightState.id}`,
-    };
+    const state = `${leftState}_${rightState}` as State;
 
     this.newStateList.push(state);
     this.newTransitions.set(state, []);

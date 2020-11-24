@@ -50,9 +50,7 @@ class TripleDirectProducer {
 
     for (const s1 of this.sccNFA1.stateList) {
       for (const s1t of this.nfa.transitions.get(s1)!) {
-        if (
-          this.sccNFA2.stateList.some((dest) => dest.id === s1t.destination.id)
-        ) {
+        if (this.sccNFA2.stateList.includes(s1t.destination)) {
           if (betweenTransitionsSCC.get(s1)! === undefined) {
             betweenTransitionsSCC.set(s1, []);
           }
@@ -63,9 +61,7 @@ class TripleDirectProducer {
 
     for (const s2 of this.sccNFA2.stateList) {
       for (const s2t of this.sccNFA2.transitions.get(s2)!) {
-        if (
-          this.sccNFA1.stateList.some((dest) => dest.id === s2t.destination.id)
-        ) {
+        if (this.sccNFA1.stateList.includes(s2t.destination)) {
           if (betweenTransitionsSCC.get(s2)! === undefined) {
             betweenTransitionsSCC.set(s2, []);
           }
@@ -176,11 +172,7 @@ class TripleDirectProducer {
         }
 
         this.newTransitions
-          .get(
-            [...this.newTransitions.keys()].filter(
-              (nt) => nt.id === exs!.id,
-            )[0],
-          )!
+          .get(exs)!
           .push({ charSet: d.charSet, destination: exd });
 
         if (this.extraTransitions.get(exs)! === undefined) {
@@ -219,9 +211,7 @@ class TripleDirectProducer {
 
   // 直積は前の状態をスペース区切りに
   createState(leftState: State, centerState: State, rightState: State): State {
-    const state: State = {
-      id: `${leftState.id}_${centerState.id}_${rightState.id}`,
-    };
+    const state = `${leftState}_${centerState}_${rightState}` as State;
 
     this.newStateList.push(state);
     this.newTransitions.set(state, []);

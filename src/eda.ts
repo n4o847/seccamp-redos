@@ -1,4 +1,4 @@
-import { getLeftString, getRightString } from './directProduct';
+import { getLeftState, getRightState } from './directProduct';
 import { buildStronglyConnectedComponents } from './scc';
 import { DirectProductNFA, Message } from './types';
 
@@ -35,7 +35,7 @@ function isEDA(dp: DirectProductNFA): boolean {
     }
 
     const lrSame = scc.stateList.filter(
-      (state) => getLeftString(state) === getRightString(state),
+      (state) => getLeftState(state) === getRightState(state),
     );
     // (n, n), (m, k) (m !== k)が存在(すべて同じじゃないが全て異なるわけではない)
     return lrSame.length < scc.stateList.length && lrSame.length > 0;

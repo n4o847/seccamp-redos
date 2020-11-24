@@ -34,12 +34,12 @@ export function toDOT(
     }
   })();
   const edges: Edge[] = [];
-  for (const [q, ds] of automaton.transitions) {
+  for (const [source, ds] of automaton.transitions) {
     for (let i = 0; i < ds.length; i++) {
       const d = ds[i];
       edges.push({
-        source: q.id,
-        destination: d.destination.id,
+        source,
+        destination: d.destination,
         priority: ordered ? i + 1 : null,
         label: toLabelString(d.charSet),
       });
@@ -63,7 +63,7 @@ export function toDOT(
           : automaton.acceptingStateSet;
       for (const q of automaton.stateList) {
         const shape = acceptingStateSet.has(q) ? `doublecircle` : `circle`;
-        out += `    ${q.id} [shape = ${shape}];\n`;
+        out += `    ${q} [shape = ${shape}];\n`;
       }
       const initialStateList =
         automaton.type === 'UnorderedNFA'
@@ -72,8 +72,8 @@ export function toDOT(
       for (let i = 0; i < initialStateList.length; i++) {
         const q = initialStateList[i];
         const priority = i + 1;
-        out += `    ${q.id}_init [shape = point];\n`;
-        out += `    ${q.id}_init -> ${q.id}${
+        out += `    ${q}_init [shape = point];\n`;
+        out += `    ${q}_init -> ${q}${
           ordered ? ` [taillabel = "${priority}"]` : ``
         };\n`;
       }

@@ -103,9 +103,7 @@ class Determinizer {
   }
 
   createState(oldStateSet: Set<State>): State {
-    const state: State = {
-      id: `Q${this.newStateId++}`,
-    };
+    const state = `Q${this.newStateId++}` as State;
     this.newStateList.push(state);
     this.newTransitions.set(state, []);
     this.newStateToOldStateSet.set(state, oldStateSet);

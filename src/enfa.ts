@@ -149,9 +149,7 @@ class Builder {
   }
 
   private createState(): State {
-    const state: State = {
-      id: `q${this.stateId++}`,
-    };
+    const state = `q${this.stateId++}` as State;
     this.stateList.push(state);
     this.transitions.set(state, []);
     return state;
