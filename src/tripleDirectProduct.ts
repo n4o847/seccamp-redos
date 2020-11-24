@@ -1,4 +1,5 @@
 import { CharSet } from 'rerejs';
+import { intersectCharSets } from './char';
 import {
   TripleDirectProductNFA,
   SCCPossibleAutomaton,
@@ -6,10 +7,6 @@ import {
   NonNullableTransition,
   StronglyConnectedComponentNFA,
 } from './types';
-import { 
-  enumerateCharset,
-  intersectCharSets
-} from './char';
 
 export function buildTripleDirectProductNFAs(
   sccs: StronglyConnectedComponentNFA[],
@@ -152,7 +149,11 @@ class TripleDirectProducer {
                   );
                 }
 
-                const lcre = intersectCharSets(ld.charSet, cd.charSet, rd.charSet);
+                const lcre = intersectCharSets(
+                  ld.charSet,
+                  cd.charSet,
+                  rd.charSet,
+                );
                 this.addTransition(source, lcre, dest);
               }
             }

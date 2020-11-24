@@ -89,7 +89,7 @@ class DirectProducer {
 
   getState(leftState: State, rightState: State): State | null {
     for (const [ns, os] of this.newStateToOldStateSet) {
-      if (os[0] === leftState && os[1] == rightState) {
+      if (os[0] === leftState && os[1] === rightState) {
         return ns;
       }
     }
