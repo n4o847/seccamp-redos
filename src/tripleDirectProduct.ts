@@ -3,7 +3,6 @@ import {
   StronglyConnectedComponentNFA,
   SCCPossibleAutomaton,
   State,
-  Char,
 } from './types';
 import { TransitionMap } from './automaton';
 
@@ -122,7 +121,7 @@ class TripleDirectProductBuilder {
                     dest = this.createState(ld, cd, rd);
                   }
 
-                  this.addTransition(source, char, dest);
+                  this.newTransitions.add(source, char, dest);
                 }
               }
             }
@@ -132,29 +131,20 @@ class TripleDirectProductBuilder {
     }
 
     // IDA判定のために、強連結成分間の戻る辺を追加
-    for (const [s, dests] of betweenTransitionsSCC) {
-      for (const d of dests) {
-        let exs = this.getState(s, d.destination, d.destination);
-        if (exs === null) {
-          exs = this.createState(s, d.destination, d.destination);
-        }
-
-        let exd = this.getState(s, s, d.destination);
-        if (exd === null) {
-          exd = this.createState(s, s, d.destination);
-        }
-
-        this.newTransitions
-          .get(exs)!
-          .push({ charSet: d.charSet, destination: exd });
-
-        if (this.extraTransitions.get(exs)! === undefined) {
-          this.extraTransitions.set(exs, []);
-        }
-        this.extraTransitions
-          .get(exs)!
-          .push({ charSet: d.charSet, destination: exd });
+    for (const [s, char, d] of betweenTransitionsSCC) {
+      let exs = this.getState(s, d, d);
+      if (exs === null) {
+        exs = this.createState(s, d, d);
       }
+
+      let exd = this.getState(s, s, d);
+      if (exd === null) {
+        exd = this.createState(s, s, d);
+      }
+
+      this.newTransitions.add(exs, char, exd);
+
+      this.extraTransitions.add(exs, char, exd);
     }
 
     return {
@@ -191,9 +181,5 @@ class TripleDirectProductBuilder {
 
     this.newStateToOldStateSet.set(state, [leftState, centerState, rightState]);
     return state;
-  }
-
-  private addTransition(source: State, char: Char, destination: State): void {
-    this.newTransitions.add(source, char, destination);
   }
 }
