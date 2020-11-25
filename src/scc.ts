@@ -91,7 +91,7 @@ class StronglyConnectedComponents {
 
     // 同じ強連結成分同士の集合を作る
     for (const char of this.nfa.alphabet) {
-      for (const destination of this.reversedTransitions.get(state, char)) {
+      for (const destination of this.nfa.transitions.get(state, char)) {
         this.rdfs(destination, cnt);
       }
     }
