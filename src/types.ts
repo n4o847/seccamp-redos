@@ -5,6 +5,8 @@ import {
   Dot as RerejsDot,
 } from 'rerejs';
 
+import { TransitionMap } from './automaton';
+
 export type Automaton =
   | EpsilonNFA
   | NonEpsilonNFA
@@ -21,8 +23,8 @@ export type SCCPossibleAutomaton =
 
 export type EpsilonNFA = {
   type: 'EpsilonNFA';
-  alphabet: Char[];
   stateList: State[];
+  alphabet: Set<Char>;
   initialState: State;
   acceptingState: State;
   transitions: Map<State, NullableTransition[]>;
@@ -30,51 +32,51 @@ export type EpsilonNFA = {
 
 export type NonEpsilonNFA = {
   type: 'NonEpsilonNFA';
-  alphabet: Char[];
   stateList: State[];
+  alphabet: Set<Char>;
   initialState: State;
   acceptingStateSet: Set<State>;
-  transitions: Map<State, Map<Char, State[]>>;
+  transitions: TransitionMap;
 };
 
 export type StronglyConnectedComponentNFA = {
   type: 'StronglyConnectedComponentNFA';
-  alphabet: Char[];
   stateList: State[];
-  transitions: Map<State, Map<Char, State[]>>;
+  alphabet: Set<Char>;
+  transitions: TransitionMap;
 };
 
 export type DirectProductGraph = {
   type: 'DirectProductGraph';
-  alphabet: Char[];
+  alphabet: Set<Char>;
   stateList: State[];
-  transitions: Map<State, Map<Char, State[]>>;
+  transitions: TransitionMap;
 };
 
 export type TripleDirectProductGraph = {
   type: 'TripleDirectProductGraph';
-  alphabet: Char[];
   stateList: State[];
-  transitions: Map<State, Map<Char, State[]>>;
-  extraTransitions: Map<State, Map<Char, State[]>>;
+  alphabet: Set<Char>;
+  transitions: TransitionMap;
+  extraTransitions: TransitionMap;
 };
 
 export type UnorderedNFA = {
   type: 'UnorderedNFA';
-  alphabet: Char[];
   stateList: State[];
+  alphabet: Set<Char>;
   initialStateSet: Set<State>;
   acceptingStateSet: Set<State>;
-  transitions: Map<State, Map<Char, State[]>>;
+  transitions: TransitionMap;
 };
 
 export type DFA = {
   type: 'DFA';
-  alphabet: Char[];
   stateList: State[];
+  alphabet: Set<Char>;
   initialState: State;
   acceptingStateSet: Set<State>;
-  transitions: Map<State, Map<Char, State[]>>;
+  transitions: TransitionMap;
 };
 
 /**
