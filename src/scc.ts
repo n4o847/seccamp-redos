@@ -1,13 +1,13 @@
 import {
   SCCPossibleAutomaton,
   State,
-  StronglyConnectedComponentNFA,
+  StronglyConnectedComponentGraph,
 } from './types';
 import { TransitionMap } from './automaton';
 
 export function buildStronglyConnectedComponents(
   nfa: SCCPossibleAutomaton,
-): StronglyConnectedComponentNFA[] {
+): StronglyConnectedComponentGraph[] {
   return new StronglyConnectedComponents(nfa).build();
 }
 
@@ -16,11 +16,11 @@ class StronglyConnectedComponents {
   private used: Map<State, boolean> = new Map();
   private order: State[] = [];
   private comp: Map<State, number> = new Map();
-  private sccList: StronglyConnectedComponentNFA[] = [];
+  private sccList: StronglyConnectedComponentGraph[] = [];
 
   constructor(private nfa: SCCPossibleAutomaton) {}
 
-  build(): StronglyConnectedComponentNFA[] {
+  build(): StronglyConnectedComponentGraph[] {
     this.nfa.stateList.forEach((state) => {
       this.used.set(state, false);
       this.comp.set(state, -1);
@@ -79,7 +79,7 @@ class StronglyConnectedComponents {
 
     if (cnt === this.sccList.length) {
       this.sccList.push({
-        type: 'StronglyConnectedComponentNFA',
+        type: 'StronglyConnectedComponentGraph',
         stateList: [],
         alphabet: this.nfa.alphabet,
         transitions: new TransitionMap(),

@@ -1,13 +1,13 @@
 import {
   TripleDirectProductGraph,
-  StronglyConnectedComponentNFA,
+  StronglyConnectedComponentGraph,
   SCCPossibleAutomaton,
   State,
 } from './types';
 import { TransitionMap } from './automaton';
 
 export function buildTripleDirectProductGraphs(
-  sccs: StronglyConnectedComponentNFA[],
+  sccs: StronglyConnectedComponentGraph[],
   nfa: SCCPossibleAutomaton,
 ): TripleDirectProductGraph[] {
   return sccs
@@ -20,11 +20,11 @@ export function buildTripleDirectProductGraphs(
 }
 
 export function buildTripleDirectProductGraph(
-  sccNFA1: StronglyConnectedComponentNFA,
-  sccNFA2: StronglyConnectedComponentNFA,
+  sccGraph1: StronglyConnectedComponentGraph,
+  sccGraph2: StronglyConnectedComponentGraph,
   nfa: SCCPossibleAutomaton,
 ): TripleDirectProductGraph {
-  return new TripleDirectProductBuilder(sccNFA1, sccNFA2, nfa).build();
+  return new TripleDirectProductBuilder(sccGraph1, sccGraph2, nfa).build();
 }
 
 class TripleDirectProductBuilder {
@@ -34,8 +34,8 @@ class TripleDirectProductBuilder {
   private extraTransitions = new TransitionMap();
 
   constructor(
-    private sccNFA1: StronglyConnectedComponentNFA,
-    private sccNFA2: StronglyConnectedComponentNFA,
+    private sccGraph1: StronglyConnectedComponentGraph,
+    private sccGraph2: StronglyConnectedComponentGraph,
     private nfa: SCCPossibleAutomaton,
   ) {}
 
@@ -43,34 +43,34 @@ class TripleDirectProductBuilder {
     // 強連結成分scc1, scc2間のTransitionsを取得する
     const betweenTransitionsSCC = new TransitionMap();
 
-    for (const s1 of this.sccNFA1.stateList) {
+    for (const s1 of this.sccGraph1.stateList) {
       for (const char of this.nfa.alphabet) {
         for (const d of this.nfa.transitions.get(s1, char)) {
-          if (this.sccNFA2.stateList.includes(d)) {
+          if (this.sccGraph2.stateList.includes(d)) {
             betweenTransitionsSCC.add(s1, char, d);
           }
         }
       }
     }
 
-    for (const s2 of this.sccNFA2.stateList) {
+    for (const s2 of this.sccGraph2.stateList) {
       for (const char of this.nfa.alphabet) {
         for (const d of this.nfa.transitions.get(s2, char)) {
-          if (this.sccNFA1.stateList.includes(d)) {
+          if (this.sccGraph1.stateList.includes(d)) {
             betweenTransitionsSCC.add(s2, char, d);
           }
         }
       }
     }
 
-    // 後々のループのネストを浅くするため、2つのsccNFAの和集合を作る
+    // 後々のループのネストを浅くするため、2つのsccGraphの和集合を作る
     const sumOfTwoSccStateList: Set<State> = new Set();
 
-    for (const s1 of this.sccNFA1.stateList) {
+    for (const s1 of this.sccGraph1.stateList) {
       sumOfTwoSccStateList.add(s1);
     }
 
-    for (const s2 of this.sccNFA2.stateList) {
+    for (const s2 of this.sccGraph2.stateList) {
       sumOfTwoSccStateList.add(s2);
     }
 
@@ -84,11 +84,11 @@ class TripleDirectProductBuilder {
 
     const sumOfTwoSccTransitions = new TransitionMap();
 
-    for (const [q, char, d] of this.sccNFA1.transitions) {
+    for (const [q, char, d] of this.sccGraph1.transitions) {
       sumOfTwoSccTransitions.add(q, char, d);
     }
 
-    for (const [q, char, d] of this.sccNFA2.transitions) {
+    for (const [q, char, d] of this.sccGraph2.transitions) {
       sumOfTwoSccTransitions.add(q, char, d);
     }
 
@@ -97,8 +97,8 @@ class TripleDirectProductBuilder {
     }
 
     const alphabet = new Set([
-      ...this.sccNFA1.alphabet,
-      ...this.sccNFA2.alphabet,
+      ...this.sccGraph1.alphabet,
+      ...this.sccGraph2.alphabet,
       ...this.nfa.alphabet,
     ]);
 

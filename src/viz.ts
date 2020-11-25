@@ -25,7 +25,7 @@ export function toDOT(
         return true;
       case 'UnorderedNFA':
         return false;
-      case 'StronglyConnectedComponentNFA':
+      case 'StronglyConnectedComponentGraph':
         return false;
       case 'DirectProductGraph':
         return false;
@@ -72,7 +72,7 @@ export function toDOT(
   }
 
   switch (automaton.type) {
-    case 'StronglyConnectedComponentNFA':
+    case 'StronglyConnectedComponentGraph':
     case 'DirectProductGraph':
     case 'TripleDirectProductGraph':
       break;

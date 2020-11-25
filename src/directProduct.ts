@@ -1,20 +1,20 @@
 import {
   DirectProductGraph,
   State,
-  StronglyConnectedComponentNFA,
+  StronglyConnectedComponentGraph,
 } from './types';
 import { TransitionMap } from './automaton';
 
 export function buildDirectProductGraphs(
-  sccs: StronglyConnectedComponentNFA[],
+  sccs: StronglyConnectedComponentGraph[],
 ): DirectProductGraph[] {
   return sccs.map((scc) => buildDirectProductGraph(scc));
 }
 
 export function buildDirectProductGraph(
-  sccNFA: StronglyConnectedComponentNFA,
+  sccGraph: StronglyConnectedComponentGraph,
 ): DirectProductGraph {
-  return new DirectProductBuilder(sccNFA).build();
+  return new DirectProductBuilder(sccGraph).build();
 }
 
 export function getLeftState(state: State): State {
@@ -30,20 +30,20 @@ class DirectProductBuilder {
   private newTransitions = new TransitionMap();
   private newStateToOldStateSet: Map<State, [State, State]> = new Map();
 
-  constructor(private sccNFA: StronglyConnectedComponentNFA) {}
+  constructor(private sccGraph: StronglyConnectedComponentGraph) {}
 
   build(): DirectProductGraph {
-    for (const ls of this.sccNFA.stateList) {
-      for (const rs of this.sccNFA.stateList) {
+    for (const ls of this.sccGraph.stateList) {
+      for (const rs of this.sccGraph.stateList) {
         this.createState(ls, rs);
       }
     }
 
-    for (const lq of this.sccNFA.stateList) {
-      for (const rq of this.sccNFA.stateList) {
-        for (const char of this.sccNFA.alphabet) {
-          for (const ld of this.sccNFA.transitions.get(lq, char)) {
-            for (const rd of this.sccNFA.transitions.get(rq, char)!) {
+    for (const lq of this.sccGraph.stateList) {
+      for (const rq of this.sccGraph.stateList) {
+        for (const char of this.sccGraph.alphabet) {
+          for (const ld of this.sccGraph.transitions.get(lq, char)) {
+            for (const rd of this.sccGraph.transitions.get(rq, char)!) {
               let source = this.getState(lq, rq);
               if (source === null) {
                 source = this.createState(lq, rq);
@@ -65,7 +65,7 @@ class DirectProductBuilder {
     return {
       type: 'DirectProductGraph',
       stateList: this.newStateList,
-      alphabet: this.sccNFA.alphabet,
+      alphabet: this.sccGraph.alphabet,
       transitions: this.newTransitions,
     };
   }

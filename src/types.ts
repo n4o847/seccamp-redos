@@ -12,7 +12,7 @@ export type Automaton =
   | NonEpsilonNFA
   | UnorderedNFA
   | DFA
-  | StronglyConnectedComponentNFA
+  | StronglyConnectedComponentGraph
   | DirectProductGraph
   | TripleDirectProductGraph;
 
@@ -39,8 +39,8 @@ export type NonEpsilonNFA = {
   transitions: TransitionMap;
 };
 
-export type StronglyConnectedComponentNFA = {
-  type: 'StronglyConnectedComponentNFA';
+export type StronglyConnectedComponentGraph = {
+  type: 'StronglyConnectedComponentGraph';
   stateList: State[];
   alphabet: Set<Char>;
   transitions: TransitionMap;
