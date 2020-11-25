@@ -1,6 +1,6 @@
-import { Pattern, Node, CharSet } from 'rerejs';
-import { EpsilonNFA, State, NullableTransition } from './types';
-import { createCharSet } from './char';
+import { Pattern, Node } from 'rerejs';
+import { EpsilonNFA, State, NullableTransition, Char, Atom } from './types';
+import { extendAlphabet, getChars } from './char';
 
 /**
  * Thompson's construction を用いて rerejs.Pattern から ε-NFA を構築する。
@@ -11,15 +11,14 @@ export function buildEpsilonNFA(pattern: Pattern): EpsilonNFA {
 
 class EpsilonNFABuilder {
   private stateList: State[] = [];
-  private transitions: Map<State, NullableTransition[]> = new Map();
-  private stateId = 0;
   /**
-   * 構築時に得られた rerejs.CharSet 上の各区間の始端と終端を集める。
-   * これによって Unicode 上の文字を区別するのに十分な（必要とは限らない）区間の分割を得る。
-   * 文字を列挙する際は alphabet[i] <= ch < alphabet[i + 1] であるような ch を
-   * 各 0 <= i < alphabet.length - 1 について列挙して charSet.has(ch) で判定すれば良い。
+   * 文字集合の処理をする前の遷移関数。
+   * extendAlphabet で構築時に現れる文字を集めておいて、
+   * 最後に getChars でノードから文字の集合を得る。
    */
-  private partitionPoints: Set<number> = new Set();
+  private transitions: [State, Atom | null, State][] = [];
+  private stateId = 0;
+  private alphabet: Set<Char> = new Set();
 
   constructor(private pattern: Pattern) {}
 
@@ -27,14 +26,29 @@ class EpsilonNFABuilder {
     const { initialState, acceptingState } = this.buildChild(
       this.pattern.child,
     );
-    const alphabet = Array.from(this.partitionPoints).sort((a, b) => a - b);
+    const transitions = new Map<State, NullableTransition[]>(
+      this.stateList.map((q) => [q, []]),
+    );
+    for (const [source, node, destination] of this.transitions) {
+      if (node === null) {
+        transitions.get(source)!.push({ epsilon: true, destination });
+      } else {
+        for (const char of getChars(
+          this.alphabet,
+          node,
+          this.pattern.flagSet,
+        )) {
+          transitions.get(source)!.push({ epsilon: false, char, destination });
+        }
+      }
+    }
     return {
       type: 'EpsilonNFA',
-      alphabet,
+      alphabet: this.alphabet,
       stateList: this.stateList,
       initialState,
       acceptingState,
-      transitions: this.transitions,
+      transitions,
     };
   }
 
@@ -142,8 +156,8 @@ class EpsilonNFABuilder {
       case 'Dot': {
         const q0 = this.createState();
         const f0 = this.createState();
-        const charSet = createCharSet(node, this.pattern.flagSet);
-        this.addTransition(q0, charSet, f0);
+        extendAlphabet(this.alphabet, node, this.pattern.flagSet);
+        this.addTransition(q0, node, f0);
         return {
           initialState: q0,
           acceptingState: f0,
@@ -159,20 +173,14 @@ class EpsilonNFABuilder {
   private createState(): State {
     const state = `q${this.stateId++}` as State;
     this.stateList.push(state);
-    this.transitions.set(state, []);
     return state;
   }
 
   private addTransition(
     source: State,
-    charSet: CharSet | null,
+    node: Atom | null,
     destination: State,
   ): void {
-    if (charSet !== null) {
-      for (const codePoint of charSet.data) {
-        this.partitionPoints.add(codePoint);
-      }
-    }
-    this.transitions.get(source)!.push({ charSet, destination });
+    this.transitions.push([source, node, destination]);
   }
 }
