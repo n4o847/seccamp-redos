@@ -1,11 +1,9 @@
-import { CharSet } from 'rerejs';
 import {
   DirectProductGraph,
   State,
-  NonNullableTransition,
   StronglyConnectedComponentNFA,
 } from './types';
-import { intersectCharSets } from './char';
+import { TransitionMap } from './automaton';
 
 export function buildDirectProductGraphs(
   sccs: StronglyConnectedComponentNFA[],
@@ -29,10 +27,12 @@ export function getRightState(state: State): State {
 
 class DirectProductBuilder {
   private newStateList: State[] = [];
-  private newTransitions: Map<State, NonNullableTransition[]> = new Map();
+  private newTransitions: TransitionMap;
   private newStateToOldStateSet: Map<State, [State, State]> = new Map();
 
-  constructor(private sccNFA: StronglyConnectedComponentNFA) {}
+  constructor(private sccNFA: StronglyConnectedComponentNFA) {
+    this.newTransitions = new TransitionMap(sccNFA.stateList, sccNFA.alphabet);
+  }
 
   build(): DirectProductGraph {
     for (const ls of this.sccNFA.stateList) {
@@ -41,22 +41,24 @@ class DirectProductBuilder {
       }
     }
 
-    for (const [lq, lds] of this.sccNFA.transitions) {
-      for (const ld of lds) {
-        for (const [rq, rds] of this.sccNFA.transitions) {
-          for (const rd of rds) {
-            let source = this.getState(lq, rq);
-            if (source === null) {
-              source = this.createState(lq, rq);
-            }
+    for (const lq of this.sccNFA.stateList) {
+      for (const rq of this.sccNFA.stateList) {
+        for (const char of this.sccNFA.alphabet) {
+          for (const ld of this.sccNFA.transitions.get(lq, char)) {
+            for (const rd of this.sccNFA.transitions.get(rq, char)!) {
+              let source = this.getState(lq, rq);
+              if (source === null) {
+                source = this.createState(lq, rq);
+              }
 
-            let dest = this.getState(ld.destination, rd.destination);
-            if (dest === null) {
-              dest = this.createState(ld.destination, rd.destination);
-            }
+              let dest = this.getState(ld, rd);
+              if (dest === null) {
+                dest = this.createState(ld, rd);
+              }
 
-            const lrCharSet = intersectCharSets(ld.charSet, rd.charSet);
-            this.addTransition(source, lrCharSet, dest);
+              // 2重辺も許容する
+              this.newTransitions.add(source, char, dest);
+            }
           }
         }
       }
@@ -65,6 +67,7 @@ class DirectProductBuilder {
     return {
       type: 'DirectProductGraph',
       stateList: this.newStateList,
+      alphabet: this.sccNFA.alphabet,
       transitions: this.newTransitions,
     };
   }
@@ -83,17 +86,8 @@ class DirectProductBuilder {
     const state = `${leftState}_${rightState}` as State;
 
     this.newStateList.push(state);
-    this.newTransitions.set(state, []);
+
     this.newStateToOldStateSet.set(state, [leftState, rightState]);
     return state;
-  }
-
-  private addTransition(
-    source: State,
-    charSet: CharSet,
-    destination: State,
-  ): void {
-    // 2重辺も許容する
-    this.newTransitions.get(source)!.push({ charSet, destination });
   }
 }
