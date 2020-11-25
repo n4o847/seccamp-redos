@@ -19,18 +19,13 @@ function isEDA(dp: DirectProductGraph): boolean {
   return sccs.some((scc) => {
     // Setがもとの二重辺の配列よりサイズが小さくなれば二重辺が存在
     for (const source of scc.stateList) {
-      const loopBackStringArray = scc.transitions
-        .get(source)!
-        .filter((tr) => {
-          return source === tr.destination;
-        })
-        .map((tr) => {
-          return tr.charSet.toString();
-        });
-      const loopBackStringSet = new Set(loopBackStringArray);
+      for (const char of scc.alphabet) {
+        const destinationArray = scc.transitions.get(source, char);
+        const destinationSet = new Set(destinationArray);
 
-      if (loopBackStringSet.size < loopBackStringArray.length) {
-        return true;
+        if (destinationSet.size < destinationArray.length) {
+          return true;
+        }
       }
     }
 
