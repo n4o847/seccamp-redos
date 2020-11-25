@@ -30,7 +30,11 @@ export function extendAlphabet(
 ): void {
   switch (node.type) {
     case 'Char': {
-      alphabet.add(node.raw);
+      let char = node.raw;
+      if (flagSet.ignoreCase) {
+        char = canonicalizeChar(char);
+      }
+      alphabet.add(char);
       return;
     }
     case 'EscapeClass': {
@@ -79,7 +83,7 @@ export function extendAlphabet(
             for (let c = begin; c < end; c++) {
               let s = String.fromCharCode(c);
               if (flagSet.ignoreCase) {
-                s = s.toUpperCase();
+                s = canonicalizeChar(s);
               }
               alphabet.add(s);
             }
@@ -109,7 +113,11 @@ export function getChars(
 ): Set<Char> {
   switch (node.type) {
     case 'Char': {
-      return new Set([node.raw]);
+      let char = node.raw;
+      if (flagSet.ignoreCase) {
+        char = canonicalizeChar(char);
+      }
+      return new Set([char]);
     }
     case 'EscapeClass': {
       switch (node.kind) {
@@ -159,7 +167,7 @@ export function getChars(
             for (let c = begin; c < end; c++) {
               let s = String.fromCharCode(c);
               if (flagSet.ignoreCase) {
-                s = s.toUpperCase();
+                s = canonicalizeChar(s);
               }
               chars.add(s);
             }
@@ -177,6 +185,10 @@ export function getChars(
       return new Set(alphabet);
     }
   }
+}
+
+export function canonicalizeChar(char: string): string {
+  return char.toUpperCase();
 }
 
 /* 以下旧実装 */
