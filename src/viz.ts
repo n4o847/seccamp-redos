@@ -49,14 +49,19 @@ export function toDOT(
       }
     }
   } else {
-    for (const [source, char, destination] of automaton.transitions) {
-      edges.push({
-        source,
-        destination,
-        priority: null,
-        // TODO: その他の文字の処理
-        label: char ?? '',
-      });
+    for (const source of automaton.stateList) {
+      for (const char of automaton.alphabet) {
+        const destinations = automaton.transitions.get(source, char);
+        for (let i = 0; i < destinations.length; i++) {
+          edges.push({
+            source,
+            destination: destinations[i],
+            priority: ordered ? i + 1 : null,
+            // TODO: その他の文字の処理
+            label: char ?? '',
+          });
+        }
+      }
     }
   }
 
