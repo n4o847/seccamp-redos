@@ -46,3 +46,13 @@ export function assignUnion<T>(set: Set<T>, subset: Set<T>): Set<T> {
   }
   return set;
 }
+
+export function subtract<T>(a: Set<T>, b: Set<T>): Set<T> {
+  const c = new Set<T>();
+  for (const e of a) {
+    if (!b.has(e)) {
+      c.add(e);
+    }
+  }
+  return c;
+}
