@@ -33,18 +33,33 @@ export function toDOT(
         return false;
     }
   })();
+
   const edges: Edge[] = [];
-  for (const [source, ds] of automaton.transitions) {
-    for (let i = 0; i < ds.length; i++) {
-      const d = ds[i];
+  if (automaton.type === 'EpsilonNFA') {
+    for (const [source, ds] of automaton.transitions) {
+      for (let i = 0; i < ds.length; i++) {
+        const d = ds[i];
+        edges.push({
+          source,
+          destination: d.destination,
+          priority: ordered ? i + 1 : null,
+          // TODO: その他の文字の処理
+          label: d.epsilon ? '&epsilon;' : d.char ?? '',
+        });
+      }
+    }
+  } else {
+    for (const [source, char, destination] of automaton.transitions) {
       edges.push({
         source,
-        destination: d.destination,
-        priority: ordered ? i + 1 : null,
-        label: toLabelString(d.charSet),
+        destination,
+        priority: null,
+        // TODO: その他の文字の処理
+        label: char ?? '',
       });
     }
   }
+
   let out = '';
   out += `digraph {\n`;
   if (options.horizontal) {
