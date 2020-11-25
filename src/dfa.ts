@@ -1,36 +1,18 @@
-import { CharSet } from 'rerejs';
-import {
-  NonEpsilonNFA,
-  UnorderedNFA,
-  DFA,
-  State,
-  NonNullableTransition,
-} from './types';
+import { NonEpsilonNFA, UnorderedNFA, DFA, State } from './types';
+import { TransitionMap } from './automaton';
 import { equals, intersect } from './util';
 
 /**
  * NFA をリバースする。優先度の情報は失われる。
  */
 export function reverseNFA(nfa: NonEpsilonNFA): UnorderedNFA {
-  const reversedTransitions = new Map<State, NonNullableTransition[]>();
-  for (const q of nfa.stateList) {
-    reversedTransitions.set(q, []);
-  }
-  for (const [q, ds] of nfa.transitions) {
-    for (const d of ds) {
-      reversedTransitions.get(d.destination)!.push({
-        charSet: d.charSet,
-        destination: q,
-      });
-    }
-  }
   return {
     type: 'UnorderedNFA',
     alphabet: nfa.alphabet,
     stateList: nfa.stateList,
     initialStateSet: nfa.acceptingStateSet,
     acceptingStateSet: new Set([nfa.initialState]),
-    transitions: reversedTransitions,
+    transitions: nfa.transitions.reverse(),
   };
 }
 
@@ -43,11 +25,13 @@ export function determinize(nfa: UnorderedNFA): DFA {
 
 class DFABuilder {
   private newStateList: State[] = [];
-  private newTransitions: Map<State, NonNullableTransition[]> = new Map();
+  private newTransitions: TransitionMap;
   private newStateToOldStateSet: Map<State, Set<State>> = new Map();
   private newStateId = 0;
 
-  constructor(private nfa: UnorderedNFA) {}
+  constructor(private nfa: UnorderedNFA) {
+    this.newTransitions = new TransitionMap(nfa.stateList, nfa.alphabet);
+  }
 
   build(): DFA {
     const queue: State[] = [];
@@ -61,15 +45,9 @@ class DFABuilder {
       if (intersect(qs0, this.nfa.acceptingStateSet).size !== 0) {
         newAcceptingStateSet.add(q0);
       }
-      for (let i = 0; i < alphabet.length - 1; i++) {
-        const codePointRange: [number, number] = [alphabet[i], alphabet[i + 1]];
+      for (const char of alphabet) {
         const qs1 = new Set(
-          Array.from(qs0).flatMap((q) =>
-            this.nfa.transitions
-              .get(q)!
-              .filter((d) => d.charSet.has(codePointRange[0]))
-              .map((d) => d.destination),
-          ),
+          Array.from(qs0).flatMap((q) => this.nfa.transitions.get(q, char)),
         );
 
         if (qs1.size === 0) {
@@ -80,12 +58,12 @@ class DFABuilder {
           q1 = this.createState(qs1);
           queue.push(q1);
         }
-        this.addTransition(q0, codePointRange, q1);
+        this.newTransitions.add(q0, char, q1);
       }
     }
     return {
       type: 'DFA',
-      alphabet: this.nfa.alphabet,
+      alphabet,
       stateList: this.newStateList,
       initialState: newInitialState,
       acceptingStateSet: newAcceptingStateSet,
@@ -105,23 +83,8 @@ class DFABuilder {
   createState(oldStateSet: Set<State>): State {
     const state = `Q${this.newStateId++}` as State;
     this.newStateList.push(state);
-    this.newTransitions.set(state, []);
+
     this.newStateToOldStateSet.set(state, oldStateSet);
     return state;
-  }
-
-  addTransition(
-    source: State,
-    codePointRange: [number, number],
-    destination: State,
-  ): void {
-    for (const d of this.newTransitions.get(source)!) {
-      if (d.destination === destination) {
-        d.charSet.add(codePointRange[0], codePointRange[1]);
-        return;
-      }
-    }
-    const charSet = new CharSet(codePointRange);
-    this.newTransitions.get(source)!.push({ charSet, destination });
   }
 }
