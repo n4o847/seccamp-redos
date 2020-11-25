@@ -63,8 +63,8 @@ class DFABuilder {
     }
     return {
       type: 'DFA',
-      alphabet,
       stateList: this.newStateList,
+      alphabet,
       initialState: newInitialState,
       acceptingStateSet: newAcceptingStateSet,
       transitions: this.newTransitions,

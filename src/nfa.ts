@@ -50,8 +50,8 @@ class EpsilonEliminatedNFABuilder {
     }
     return {
       type: 'NonEpsilonNFA',
-      alphabet: this.nfa.alphabet,
       stateList: this.newStateList,
+      alphabet: this.nfa.alphabet,
       initialState: newInitialState,
       acceptingStateSet: newAcceptingStateSet,
       transitions: this.newTransitions,
