@@ -17,13 +17,14 @@ export function showMessageEDA(dps: DirectProductGraph[]): Message {
 function isEDA(dp: DirectProductGraph): boolean {
   const sccs = buildStronglyConnectedComponents(dp);
   return sccs.some((scc) => {
-    // Setがもとの二重辺の配列よりサイズが小さくなれば二重辺が存在
+    // 遷移元と遷移先が同じ遷移が複数存在するかを検出
     for (const source of scc.stateList) {
       for (const char of scc.alphabet) {
-        const destinationArray = scc.transitions.get(source, char);
-        const destinationSet = new Set(destinationArray);
+        const destinationArray = scc.transitions
+          .get(source, char)
+          .filter((d) => d === source);
 
-        if (destinationSet.size < destinationArray.length) {
+        if (destinationArray.length >= 2) {
           return true;
         }
       }
