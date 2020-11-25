@@ -20,11 +20,9 @@ type ClosureItem =
 
 class EpsilonEliminatedNFABuilder {
   private newStateList: State[] = [];
-  private newTransitions: TransitionMap;
+  private newTransitions = new TransitionMap();
 
-  constructor(private nfa: EpsilonNFA) {
-    this.newTransitions = new TransitionMap(nfa.stateList, nfa.alphabet);
-  }
+  constructor(private nfa: EpsilonNFA) {}
 
   build(): NonEpsilonNFA {
     const queue = [];

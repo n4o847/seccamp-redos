@@ -25,13 +25,11 @@ export function determinize(nfa: UnorderedNFA): DFA {
 
 class DFABuilder {
   private newStateList: State[] = [];
-  private newTransitions: TransitionMap;
+  private newTransitions = new TransitionMap();
   private newStateToOldStateSet: Map<State, Set<State>> = new Map();
   private newStateId = 0;
 
-  constructor(private nfa: UnorderedNFA) {
-    this.newTransitions = new TransitionMap(nfa.stateList, nfa.alphabet);
-  }
+  constructor(private nfa: UnorderedNFA) {}
 
   build(): DFA {
     const queue: State[] = [];

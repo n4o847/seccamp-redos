@@ -27,12 +27,10 @@ export function getRightState(state: State): State {
 
 class DirectProductBuilder {
   private newStateList: State[] = [];
-  private newTransitions: TransitionMap;
+  private newTransitions = new TransitionMap();
   private newStateToOldStateSet: Map<State, [State, State]> = new Map();
 
-  constructor(private sccNFA: StronglyConnectedComponentNFA) {
-    this.newTransitions = new TransitionMap(sccNFA.stateList, sccNFA.alphabet);
-  }
+  constructor(private sccNFA: StronglyConnectedComponentNFA) {}
 
   build(): DirectProductGraph {
     for (const ls of this.sccNFA.stateList) {
