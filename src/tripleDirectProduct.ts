@@ -1,12 +1,11 @@
-import { CharSet } from 'rerejs';
-import { intersectCharSets } from './char';
 import {
   TripleDirectProductGraph,
+  StronglyConnectedComponentNFA,
   SCCPossibleAutomaton,
   State,
-  NonNullableTransition,
-  StronglyConnectedComponentNFA,
+  Char,
 } from './types';
+import { TransitionMap } from './automaton';
 
 export function buildTripleDirectProductGraphs(
   sccs: StronglyConnectedComponentNFA[],
@@ -31,9 +30,9 @@ export function buildTripleDirectProductGraph(
 
 class TripleDirectProductBuilder {
   private newStateList: State[] = [];
-  private newTransitions: Map<State, NonNullableTransition[]> = new Map();
+  private newTransitions = new TransitionMap();
   private newStateToOldStateSet: Map<State, [State, State, State]> = new Map();
-  private extraTransitions: Map<State, NonNullableTransition[]> = new Map();
+  private extraTransitions = new TransitionMap();
 
   constructor(
     private sccNFA1: StronglyConnectedComponentNFA,
@@ -43,10 +42,7 @@ class TripleDirectProductBuilder {
 
   build(): TripleDirectProductGraph {
     // 強連結成分scc1, scc2間のTransitionsを取得する
-    const betweenTransitionsSCC: Map<
-      State,
-      NonNullableTransition[]
-    > = new Map();
+    const betweenTransitionsSCC = new TransitionMap();
 
     for (const s1 of this.sccNFA1.stateList) {
       for (const s1t of this.nfa.transitions.get(s1)!) {
@@ -89,68 +85,45 @@ class TripleDirectProductBuilder {
       }
     }
 
-    const sumOfTwoSccTransitions: Map<
-      State,
-      NonNullableTransition[]
-    > = new Map();
+    const sumOfTwoSccTransitions = new TransitionMap();
 
-    for (const [q, ds] of this.sccNFA1.transitions) {
-      for (const d of ds) {
-        if (sumOfTwoSccTransitions.get(q)! === undefined) {
-          sumOfTwoSccTransitions.set(q, []);
-        }
-        sumOfTwoSccTransitions.get(q)!.push(d);
-      }
+    for (const [q, char, d] of this.sccNFA1.transitions) {
+      sumOfTwoSccTransitions.add(q, char, d);
     }
 
-    for (const [q, ds] of this.sccNFA2.transitions) {
-      for (const d of ds) {
-        if (sumOfTwoSccTransitions.get(q)! === undefined) {
-          sumOfTwoSccTransitions.set(q, []);
-        }
-        sumOfTwoSccTransitions.get(q)!.push(d);
-      }
+    for (const [q, char, d] of this.sccNFA2.transitions) {
+      sumOfTwoSccTransitions.add(q, char, d);
     }
 
-    for (const [q, ds] of betweenTransitionsSCC) {
-      for (const d of ds) {
-        if (sumOfTwoSccTransitions.get(q)! === undefined) {
-          sumOfTwoSccTransitions.set(q, []);
-        }
-        sumOfTwoSccTransitions.get(q)!.push(d);
-      }
+    for (const [q, char, d] of betweenTransitionsSCC) {
+      sumOfTwoSccTransitions.add(q, char, d);
     }
 
-    for (const [lq, lds] of sumOfTwoSccTransitions) {
-      for (const ld of lds) {
-        for (const [cq, cds] of sumOfTwoSccTransitions) {
-          for (const cd of cds) {
-            for (const [rq, rds] of sumOfTwoSccTransitions) {
-              for (const rd of rds) {
-                let source = this.getState(lq, cq, rq);
-                if (source === null) {
-                  source = this.createState(lq, cq, rq);
+    const alphabet = new Set([
+      ...this.sccNFA1.alphabet,
+      ...this.sccNFA2.alphabet,
+      ...this.nfa.alphabet,
+    ]);
+
+    for (const lq of sumOfTwoSccStateList) {
+      for (const cq of sumOfTwoSccStateList) {
+        for (const rq of sumOfTwoSccStateList) {
+          for (const char of alphabet) {
+            for (const ld of sumOfTwoSccTransitions.get(lq, char)) {
+              for (const cd of sumOfTwoSccTransitions.get(lq, char)) {
+                for (const rd of sumOfTwoSccTransitions.get(lq, char)) {
+                  let source = this.getState(lq, cq, rq);
+                  if (source === null) {
+                    source = this.createState(lq, cq, rq);
+                  }
+
+                  let dest = this.getState(ld, cd, rd);
+                  if (dest === null) {
+                    dest = this.createState(ld, cd, rd);
+                  }
+
+                  this.addTransition(source, char, dest);
                 }
-
-                let dest = this.getState(
-                  ld.destination,
-                  cd.destination,
-                  rd.destination,
-                );
-                if (dest === null) {
-                  dest = this.createState(
-                    ld.destination,
-                    cd.destination,
-                    rd.destination,
-                  );
-                }
-
-                const lcre = intersectCharSets(
-                  ld.charSet,
-                  cd.charSet,
-                  rd.charSet,
-                );
-                this.addTransition(source, lcre, dest);
               }
             }
           }
@@ -187,6 +160,7 @@ class TripleDirectProductBuilder {
     return {
       type: 'TripleDirectProductGraph',
       stateList: this.newStateList,
+      alphabet,
       transitions: this.newTransitions,
       extraTransitions: this.extraTransitions,
     };
@@ -214,16 +188,12 @@ class TripleDirectProductBuilder {
     const state = `${leftState}_${centerState}_${rightState}` as State;
 
     this.newStateList.push(state);
-    this.newTransitions.set(state, []);
+
     this.newStateToOldStateSet.set(state, [leftState, centerState, rightState]);
     return state;
   }
 
-  private addTransition(
-    source: State,
-    charSet: CharSet,
-    destination: State,
-  ): void {
-    this.newTransitions.get(source)!.push({ charSet, destination });
+  private addTransition(source: State, char: Char, destination: State): void {
+    this.newTransitions.add(source, char, destination);
   }
 }
