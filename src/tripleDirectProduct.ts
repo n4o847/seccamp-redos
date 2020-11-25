@@ -107,8 +107,8 @@ class TripleDirectProductBuilder {
         for (const rq of sumOfTwoSccStateList) {
           for (const char of alphabet) {
             for (const ld of sumOfTwoSccTransitions.get(lq, char)) {
-              for (const cd of sumOfTwoSccTransitions.get(lq, char)) {
-                for (const rd of sumOfTwoSccTransitions.get(lq, char)) {
+              for (const cd of sumOfTwoSccTransitions.get(cq, char)) {
+                for (const rd of sumOfTwoSccTransitions.get(rq, char)) {
                   let source = this.getState(lq, cq, rq);
                   if (source === null) {
                     source = this.createState(lq, cq, rq);
