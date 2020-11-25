@@ -1,4 +1,9 @@
-import { Char, EscapeClass, Class, Dot, CharSet } from 'rerejs';
+import {
+  Char as RerejsChar,
+  EscapeClass as RerejsEscapeClass,
+  Class as RerejsClass,
+  Dot as RerejsDot,
+} from 'rerejs';
 
 export type Automaton =
   | EpsilonNFA
@@ -16,7 +21,7 @@ export type SCCPossibleAutomaton =
 
 export type EpsilonNFA = {
   type: 'EpsilonNFA';
-  alphabet: number[];
+  alphabet: Char[];
   stateList: State[];
   initialState: State;
   acceptingState: State;
@@ -25,48 +30,51 @@ export type EpsilonNFA = {
 
 export type NonEpsilonNFA = {
   type: 'NonEpsilonNFA';
-  alphabet: number[];
+  alphabet: Char[];
   stateList: State[];
   initialState: State;
   acceptingStateSet: Set<State>;
-  transitions: Map<State, NonNullableTransition[]>;
+  transitions: Map<State, Map<Char, State[]>>;
 };
 
 export type StronglyConnectedComponentNFA = {
   type: 'StronglyConnectedComponentNFA';
+  alphabet: Char[];
   stateList: State[];
-  transitions: Map<State, NonNullableTransition[]>;
+  transitions: Map<State, Map<Char, State[]>>;
 };
 
 export type DirectProductGraph = {
   type: 'DirectProductGraph';
+  alphabet: Char[];
   stateList: State[];
-  transitions: Map<State, NonNullableTransition[]>;
+  transitions: Map<State, Map<Char, State[]>>;
 };
 
 export type TripleDirectProductGraph = {
   type: 'TripleDirectProductGraph';
+  alphabet: Char[];
   stateList: State[];
-  transitions: Map<State, NonNullableTransition[]>;
-  extraTransitions: Map<State, NonNullableTransition[]>;
+  transitions: Map<State, Map<Char, State[]>>;
+  extraTransitions: Map<State, Map<Char, State[]>>;
 };
 
 export type UnorderedNFA = {
   type: 'UnorderedNFA';
-  alphabet: number[];
+  alphabet: Char[];
   stateList: State[];
   initialStateSet: Set<State>;
   acceptingStateSet: Set<State>;
-  transitions: Map<State, NonNullableTransition[]>;
+  transitions: Map<State, Map<Char, State[]>>;
 };
 
 export type DFA = {
   type: 'DFA';
-  alphabet: number[];
+  alphabet: Char[];
   stateList: State[];
   initialState: State;
   acceptingStateSet: Set<State>;
-  transitions: Map<State, NonNullableTransition[]>;
+  transitions: Map<State, Map<Char, State[]>>;
 };
 
 /**
@@ -78,19 +86,29 @@ export type DFA = {
  */
 export type State = string & { __stateBrand: never };
 
-export type Atom = Char | EscapeClass | Class | Dot;
+export type Atom = RerejsChar | RerejsEscapeClass | RerejsClass | RerejsDot;
 
-export type Transition = NullableTransition | NonNullableTransition;
+/**
+ * パターンに現れる文字。
+ * `null` はパターンに現れない文字を表す記号を意味する。
+ *
+ * 例えばパターンが `/ab.c/` の場合、パターンには `a, b, c` が現れるので、アルファベットは `'a', 'b', 'c', null` になる。
+ * `.` の部分の遷移は `'a', 'b', 'c', null` について追加するようにする。
+ * 否定クラスの場合も同様に、 例えば `/a[^b-d]/` の場合は、アルファベットは `'a', 'b', 'c', 'd', null` になって、
+ * `[^b-d]` の部分の遷移は `'a', null` について追加する。
+ */
+export type Char = string | null;
 
-export type NullableTransition = {
-  charSet: CharSet | null;
-  destination: State;
-};
-
-export type NonNullableTransition = {
-  charSet: CharSet;
-  destination: State;
-};
+export type NullableTransition =
+  | {
+      epsilon: false;
+      char: Char;
+      destination: State;
+    }
+  | {
+      epsilon: true;
+      destination: State;
+    };
 
 export type Message = {
   status: 'Safe' | 'Vulnerable' | 'Error';
