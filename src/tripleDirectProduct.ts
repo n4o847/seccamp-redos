@@ -44,23 +44,21 @@ class TripleDirectProductBuilder {
     const betweenTransitionsSCC = new TransitionMap();
 
     for (const s1 of this.sccNFA1.stateList) {
-      for (const s1t of this.nfa.transitions.get(s1)!) {
-        if (this.sccNFA2.stateList.includes(s1t.destination)) {
-          if (betweenTransitionsSCC.get(s1)! === undefined) {
-            betweenTransitionsSCC.set(s1, []);
+      for (const char of this.nfa.alphabet) {
+        for (const d of this.nfa.transitions.get(s1, char)) {
+          if (this.sccNFA2.stateList.includes(d)) {
+            betweenTransitionsSCC.add(s1, char, d);
           }
-          betweenTransitionsSCC.get(s1)!.push(s1t);
         }
       }
     }
 
     for (const s2 of this.sccNFA2.stateList) {
-      for (const s2t of this.sccNFA2.transitions.get(s2)!) {
-        if (this.sccNFA1.stateList.includes(s2t.destination)) {
-          if (betweenTransitionsSCC.get(s2)! === undefined) {
-            betweenTransitionsSCC.set(s2, []);
+      for (const char of this.nfa.alphabet) {
+        for (const d of this.nfa.transitions.get(s2, char)) {
+          if (this.sccNFA1.stateList.includes(d)) {
+            betweenTransitionsSCC.add(s2, char, d);
           }
-          betweenTransitionsSCC.get(s2)!.push(s2t);
         }
       }
     }
