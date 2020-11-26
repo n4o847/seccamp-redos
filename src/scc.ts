@@ -1,9 +1,6 @@
-import {
-  SCCPossibleAutomaton,
-  State,
-  StronglyConnectedComponentGraph,
-} from './types';
-import { TransitionMap } from './automaton';
+import { State } from './state';
+import { TransitionMap } from './transitions';
+import { SCCPossibleAutomaton, StronglyConnectedComponentGraph } from './types';
 
 export function buildStronglyConnectedComponents(
   nfa: SCCPossibleAutomaton,

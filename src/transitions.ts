@@ -1,4 +1,5 @@
-import { State, Char } from './types';
+import { State } from './state';
+import { Char } from './types';
 
 /** 遷移関数を扱うためのクラス。 */
 export class TransitionMap {

@@ -4,8 +4,8 @@ import {
   Class as RerejsClass,
   Dot as RerejsDot,
 } from 'rerejs';
-
-import { TransitionMap } from './automaton';
+import { State } from './state';
+import { TransitionMap } from './transitions';
 
 export type Automaton =
   | EpsilonNFA
@@ -78,15 +78,6 @@ export type DFA = {
   acceptingStateSet: Set<State>;
   transitions: TransitionMap;
 };
-
-/**
- * 通常の string と区別する。
- * State となる文字列は以下のフォーマットを満たす必要がある。
- * - 単なる状態のとき、'q' + (非負整数) となる。
- * - 状態のタプルを新たに状態とするとき、各要素を '_' で連結したものとなる。
- * - 状態の集合を新たに状態とするとき、未定。
- */
-export type State = string & { __stateBrand: never };
 
 export type Atom = RerejsChar | RerejsEscapeClass | RerejsClass | RerejsDot;
 

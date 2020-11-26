@@ -1,5 +1,6 @@
 import { Pattern, Node } from 'rerejs';
-import { EpsilonNFA, State, NullableTransition, Char, Atom } from './types';
+import { State } from './state';
+import { EpsilonNFA, NullableTransition, Char, Atom } from './types';
 import { extendAlphabet, getChars } from './char';
 
 /**
