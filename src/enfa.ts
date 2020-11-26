@@ -33,15 +33,12 @@ class EpsilonNFABuilder {
       if (node === null) {
         transitions.get(source)!.push({ epsilon: true, destination });
       } else {
-        for (const char of getChars(
-          this.alphabet,
-          node,
-          this.pattern.flagSet,
-        )) {
+        for (const char of this.getChars(node)) {
           transitions.get(source)!.push({ epsilon: false, char, destination });
         }
       }
     }
+
     return {
       type: 'EpsilonNFA',
       alphabet: this.alphabet,
@@ -156,7 +153,7 @@ class EpsilonNFABuilder {
       case 'Dot': {
         const q0 = this.createState();
         const f0 = this.createState();
-        extendAlphabet(this.alphabet, node, this.pattern.flagSet);
+        this.extendAlphabet(node);
         this.addTransition(q0, node, f0);
         return {
           initialState: q0,
@@ -174,6 +171,15 @@ class EpsilonNFABuilder {
     const state = `q${this.stateId++}` as State;
     this.stateList.push(state);
     return state;
+  }
+
+  private extendAlphabet(node: Atom): void {
+    // NOTE: 計算量が一番少ないthis.alphabetの更新方法
+    extendAlphabet(this.alphabet, node, this.pattern.flagSet);
+  }
+
+  private getChars(node: Atom): Set<Char> {
+    return getChars(this.alphabet, node, this.pattern.flagSet);
   }
 
   private addTransition(

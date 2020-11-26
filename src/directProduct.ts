@@ -43,7 +43,7 @@ class DirectProductBuilder {
       for (const rq of this.sccGraph.stateList) {
         for (const char of this.sccGraph.alphabet) {
           for (const ld of this.sccGraph.transitions.get(lq, char)) {
-            for (const rd of this.sccGraph.transitions.get(rq, char)!) {
+            for (const rd of this.sccGraph.transitions.get(rq, char)) {
               let source = this.getState(lq, rq);
               if (source === null) {
                 source = this.createState(lq, rq);

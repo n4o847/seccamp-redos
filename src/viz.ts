@@ -103,7 +103,7 @@ export function toDOT(
   for (const e of edges) {
     out += `    ${e.source} -> ${e.destination} [${
       ordered ? `taillabel = "${e.priority}", ` : ``
-    }label = ${JSON.stringify(e.label)}];\n`;
+    }label = ${JSON.stringify(e.label).replace(/\\/g, '\\\\')}];\n`;
   }
   out += `}\n`;
   return out;
