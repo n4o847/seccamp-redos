@@ -1,39 +1,32 @@
 import {
-  NonNullableTransition,
   SCCPossibleAutomaton,
   State,
-  StronglyConnectedComponentNFA,
+  StronglyConnectedComponentGraph,
 } from './types';
+import { TransitionMap } from './automaton';
 
 export function buildStronglyConnectedComponents(
   nfa: SCCPossibleAutomaton,
-): StronglyConnectedComponentNFA[] {
+): StronglyConnectedComponentGraph[] {
   return new StronglyConnectedComponents(nfa).build();
 }
 
 class StronglyConnectedComponents {
-  private reverseTransitions: Map<State, NonNullableTransition[]> = new Map();
+  private reversedTransitions = new TransitionMap();
   private used: Map<State, boolean> = new Map();
   private order: State[] = [];
   private comp: Map<State, number> = new Map();
-  private sccList: StronglyConnectedComponentNFA[] = [];
+  private sccList: StronglyConnectedComponentGraph[] = [];
 
   constructor(private nfa: SCCPossibleAutomaton) {}
 
-  build(): StronglyConnectedComponentNFA[] {
+  build(): StronglyConnectedComponentGraph[] {
     this.nfa.stateList.forEach((state) => {
       this.used.set(state, false);
       this.comp.set(state, -1);
-      this.reverseTransitions.set(state, []);
     });
 
-    for (const [q, ds] of this.nfa.transitions) {
-      for (const d of ds) {
-        this.reverseTransitions
-          .get(d.destination)!
-          .push({ charSet: d.charSet, destination: q });
-      }
-    }
+    this.reversedTransitions = this.nfa.transitions.reverse();
 
     for (const state of this.nfa.stateList) {
       this.dfs(state);
@@ -51,9 +44,11 @@ class StronglyConnectedComponents {
 
     for (const sccNFA of this.sccList) {
       for (const state of sccNFA.stateList) {
-        for (const tr of this.nfa.transitions.get(state)!) {
-          if (this.comp.get(state) === this.comp.get(tr.destination)) {
-            sccNFA.transitions.get(state)!.push(tr);
+        for (const char of this.nfa.alphabet) {
+          for (const destination of this.nfa.transitions.get(state, char)) {
+            if (this.comp.get(state) === this.comp.get(destination)) {
+              sccNFA.transitions.add(state, char, destination);
+            }
           }
         }
       }
@@ -63,34 +58,42 @@ class StronglyConnectedComponents {
   }
 
   private dfs(state: State): void {
-    if (this.used.get(state)!) return;
+    if (this.used.get(state)!) {
+      return;
+    }
     this.used.set(state, true);
-    for (const tr of this.nfa.transitions.get(state)!) {
-      this.dfs(tr.destination);
+    for (const char of this.nfa.alphabet) {
+      for (const destination of this.reversedTransitions.get(state, char)) {
+        this.dfs(destination);
+      }
     }
     this.order.push(state);
   }
 
   private rdfs(state: State, cnt: number): void {
-    if (this.comp.get(state)! !== -1) return;
+    if (this.comp.get(state)! !== -1) {
+      return;
+    }
 
     this.comp.set(state, cnt);
 
     if (cnt === this.sccList.length) {
       this.sccList.push({
-        type: 'StronglyConnectedComponentNFA',
+        type: 'StronglyConnectedComponentGraph',
         stateList: [],
-        transitions: new Map(),
+        alphabet: this.nfa.alphabet,
+        transitions: new TransitionMap(),
       });
     }
 
     const sccNFA = this.sccList[cnt];
     sccNFA.stateList.push(state);
-    sccNFA.transitions.set(state, []);
 
     // 同じ強連結成分同士の集合を作る
-    for (const rt of this.reverseTransitions.get(state)!) {
-      this.rdfs(rt.destination, cnt);
+    for (const char of this.nfa.alphabet) {
+      for (const destination of this.nfa.transitions.get(state, char)) {
+        this.rdfs(destination, cnt);
+      }
     }
   }
 }

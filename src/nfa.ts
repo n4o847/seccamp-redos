@@ -1,10 +1,5 @@
-import { CharSet } from 'rerejs';
-import {
-  EpsilonNFA,
-  NonEpsilonNFA,
-  State,
-  NonNullableTransition,
-} from './types';
+import { EpsilonNFA, NonEpsilonNFA, State, Char } from './types';
+import { TransitionMap } from './automaton';
 
 /**
  * ε-NFA から ε-遷移を除去する。
@@ -19,13 +14,13 @@ type ClosureItem =
     }
   | {
       accepting: false;
-      charSet: CharSet;
+      char: Char;
       destination: State;
     };
 
 class EpsilonEliminatedNFABuilder {
   private newStateList: State[] = [];
-  private newTransitions: Map<State, NonNullableTransition[]> = new Map();
+  private newTransitions = new TransitionMap();
 
   constructor(private nfa: EpsilonNFA) {}
 
@@ -33,19 +28,19 @@ class EpsilonEliminatedNFABuilder {
     const queue = [];
     const newInitialState = this.nfa.initialState;
     const newAcceptingStateSet = new Set<State>();
-    this.addState(newInitialState);
+    this.newStateList.push(newInitialState);
     queue.push(newInitialState);
     while (queue.length !== 0) {
       const q0 = queue.shift()!;
-      const c = this.buildClosure(q0);
-      for (const ci of c) {
-        if (ci.accepting) {
+      const closure = this.buildClosure(q0);
+      for (const item of closure) {
+        if (item.accepting) {
           newAcceptingStateSet.add(q0);
         } else {
-          const q1 = ci.destination;
-          this.addTransition(q0, ci.charSet, q1);
+          const q1 = item.destination;
+          this.newTransitions.add(q0, item.char, q1);
           if (!this.newStateList.includes(q1)) {
-            this.addState(q1);
+            this.newStateList.push(q1);
             queue.push(q1);
           }
         }
@@ -53,8 +48,8 @@ class EpsilonEliminatedNFABuilder {
     }
     return {
       type: 'NonEpsilonNFA',
-      alphabet: this.nfa.alphabet,
       stateList: this.newStateList,
+      alphabet: this.nfa.alphabet,
       initialState: newInitialState,
       acceptingStateSet: newAcceptingStateSet,
       transitions: this.newTransitions,
@@ -72,31 +67,18 @@ class EpsilonEliminatedNFABuilder {
       return [{ accepting: true }];
     } else {
       return this.nfa.transitions.get(q)!.flatMap((d) => {
-        if (d.charSet === null) {
+        if (d.epsilon) {
           return this.buildClosure(d.destination, [...path, q]);
         } else {
           return [
             {
               accepting: false,
-              charSet: d.charSet,
+              char: d.char,
               destination: d.destination,
             },
           ];
         }
       });
     }
-  }
-
-  private addState(oldState: State): void {
-    this.newStateList.push(oldState);
-    this.newTransitions.set(oldState, []);
-  }
-
-  private addTransition(
-    source: State,
-    charSet: CharSet,
-    destination: State,
-  ): void {
-    this.newTransitions.get(source)!.push({ charSet, destination });
   }
 }

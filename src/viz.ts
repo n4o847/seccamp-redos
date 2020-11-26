@@ -25,7 +25,7 @@ export function toDOT(
         return true;
       case 'UnorderedNFA':
         return false;
-      case 'StronglyConnectedComponentNFA':
+      case 'StronglyConnectedComponentGraph':
         return false;
       case 'DirectProductGraph':
         return false;
@@ -33,18 +33,38 @@ export function toDOT(
         return false;
     }
   })();
+
   const edges: Edge[] = [];
-  for (const [source, ds] of automaton.transitions) {
-    for (let i = 0; i < ds.length; i++) {
-      const d = ds[i];
-      edges.push({
-        source,
-        destination: d.destination,
-        priority: ordered ? i + 1 : null,
-        label: toLabelString(d.charSet),
-      });
+  if (automaton.type === 'EpsilonNFA') {
+    for (const [source, ds] of automaton.transitions) {
+      for (let i = 0; i < ds.length; i++) {
+        const d = ds[i];
+        edges.push({
+          source,
+          destination: d.destination,
+          priority: ordered ? i + 1 : null,
+          // TODO: その他の文字の処理
+          label: d.epsilon ? '&epsilon;' : d.char ?? '',
+        });
+      }
+    }
+  } else {
+    for (const source of automaton.stateList) {
+      for (const char of automaton.alphabet) {
+        const destinations = automaton.transitions.get(source, char);
+        for (let i = 0; i < destinations.length; i++) {
+          edges.push({
+            source,
+            destination: destinations[i],
+            priority: ordered ? i + 1 : null,
+            // TODO: その他の文字の処理
+            label: char ?? '',
+          });
+        }
+      }
     }
   }
+
   let out = '';
   out += `digraph {\n`;
   if (options.horizontal) {
@@ -52,7 +72,7 @@ export function toDOT(
   }
 
   switch (automaton.type) {
-    case 'StronglyConnectedComponentNFA':
+    case 'StronglyConnectedComponentGraph':
     case 'DirectProductGraph':
     case 'TripleDirectProductGraph':
       break;
@@ -83,7 +103,7 @@ export function toDOT(
   for (const e of edges) {
     out += `    ${e.source} -> ${e.destination} [${
       ordered ? `taillabel = "${e.priority}", ` : ``
-    }label = ${JSON.stringify(e.label)}];\n`;
+    }label = ${JSON.stringify(e.label).replace(/\\/g, '\\\\')}];\n`;
   }
   out += `}\n`;
   return out;

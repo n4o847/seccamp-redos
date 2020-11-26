@@ -17,20 +17,16 @@ export function showMessageEDA(dps: DirectProductGraph[]): Message {
 function isEDA(dp: DirectProductGraph): boolean {
   const sccs = buildStronglyConnectedComponents(dp);
   return sccs.some((scc) => {
-    // Setがもとの二重辺の配列よりサイズが小さくなれば二重辺が存在
+    // 遷移元と遷移先が同じ遷移が複数存在するかを検出
     for (const source of scc.stateList) {
-      const loopBackStringArray = scc.transitions
-        .get(source)!
-        .filter((tr) => {
-          return source === tr.destination;
-        })
-        .map((tr) => {
-          return tr.charSet.toString();
-        });
-      const loopBackStringSet = new Set(loopBackStringArray);
+      for (const char of scc.alphabet) {
+        const destinationArray = scc.transitions
+          .get(source, char)
+          .filter((d) => d === source);
 
-      if (loopBackStringSet.size < loopBackStringArray.length) {
-        return true;
+        if (destinationArray.length >= 2) {
+          return true;
+        }
       }
     }
 

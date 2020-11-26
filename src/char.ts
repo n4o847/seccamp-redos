@@ -1,5 +1,197 @@
 import { CharSet, FlagSet } from 'rerejs';
-import { Atom } from './types';
+import { Atom, Char } from './types';
+import { subtract } from './util';
+
+const DIGIT = new Set<Char>();
+const WORD = new Set<Char>();
+const SPACE = new Set<Char>();
+
+// \x00 から \xff までの範囲で対応
+for (let c = 0x00; c <= 0xff; c++) {
+  const s = String.fromCharCode(c);
+  if (/^\d$/.test(s)) {
+    DIGIT.add(s);
+  }
+  if (/^\w$/.test(s)) {
+    WORD.add(s);
+  }
+  if (/^\s$/.test(s)) {
+    SPACE.add(s);
+  }
+}
+
+/**
+ * オートマトン構築時に出現する文字を集める。
+ */
+export function extendAlphabet(
+  alphabet: Set<Char>,
+  node: Atom,
+  flagSet: FlagSet,
+): void {
+  switch (node.type) {
+    case 'Char': {
+      let char = node.raw;
+      if (flagSet.ignoreCase) {
+        char = canonicalizeChar(char);
+      }
+      alphabet.add(char);
+      return;
+    }
+    case 'EscapeClass': {
+      switch (node.kind) {
+        case 'digit': {
+          for (const ch of DIGIT) {
+            alphabet.add(ch);
+          }
+          break;
+        }
+        case 'word': {
+          for (const ch of WORD) {
+            alphabet.add(ch);
+          }
+          break;
+        }
+        case 'space': {
+          for (const ch of SPACE) {
+            alphabet.add(ch);
+          }
+          break;
+        }
+        case 'unicode_property': {
+          throw new Error('unimplemented');
+        }
+        case 'unicode_property_value': {
+          throw new Error('unimplemented');
+        }
+      }
+      if (node.invert) {
+        alphabet.add(null);
+      }
+      return;
+    }
+    case 'Class': {
+      for (const child of node.children) {
+        switch (child.type) {
+          case 'Char':
+          case 'EscapeClass': {
+            extendAlphabet(alphabet, child, flagSet);
+            break;
+          }
+          case 'ClassRange': {
+            const begin = child.children[0].value;
+            const end = child.children[1].value + 1;
+            for (let c = begin; c < end; c++) {
+              let s = String.fromCharCode(c);
+              if (flagSet.ignoreCase) {
+                s = canonicalizeChar(s);
+              }
+              alphabet.add(s);
+            }
+            break;
+          }
+        }
+      }
+      if (node.invert) {
+        alphabet.add(null);
+      }
+      return;
+    }
+    case 'Dot': {
+      alphabet.add(null);
+      return;
+    }
+  }
+}
+
+/**
+ * 構築済みの alphabet から対象となる文字を集める。
+ */
+export function getChars(
+  alphabet: Set<Char>,
+  node: Atom,
+  flagSet: FlagSet,
+): Set<Char> {
+  switch (node.type) {
+    case 'Char': {
+      let char = node.raw;
+      if (flagSet.ignoreCase) {
+        char = canonicalizeChar(char);
+      }
+      return new Set([char]);
+    }
+    case 'EscapeClass': {
+      switch (node.kind) {
+        case 'digit': {
+          if (!node.invert) {
+            return new Set(DIGIT);
+          } else {
+            return subtract(alphabet, DIGIT);
+          }
+        }
+        case 'word': {
+          if (!node.invert) {
+            return new Set(WORD);
+          } else {
+            return subtract(alphabet, WORD);
+          }
+        }
+        case 'space': {
+          if (!node.invert) {
+            return new Set(SPACE);
+          } else {
+            return subtract(alphabet, SPACE);
+          }
+        }
+        case 'unicode_property': {
+          throw new Error('unimplemented');
+        }
+        case 'unicode_property_value': {
+          throw new Error('unimplemented');
+        }
+      }
+    }
+    case 'Class': {
+      const chars = new Set<Char>();
+      for (const child of node.children) {
+        switch (child.type) {
+          case 'Char':
+          case 'EscapeClass': {
+            for (const ch of getChars(alphabet, child, flagSet)) {
+              chars.add(ch);
+            }
+            break;
+          }
+          case 'ClassRange': {
+            const begin = child.children[0].value;
+            const end = child.children[1].value + 1;
+            for (let c = begin; c < end; c++) {
+              let s = String.fromCharCode(c);
+              if (flagSet.ignoreCase) {
+                s = canonicalizeChar(s);
+              }
+              chars.add(s);
+            }
+            break;
+          }
+        }
+      }
+      if (!node.invert) {
+        return chars;
+      } else {
+        return subtract(alphabet, chars);
+      }
+    }
+    case 'Dot': {
+      return new Set(alphabet);
+    }
+  }
+}
+
+export function canonicalizeChar(char: string): string {
+  return char.toUpperCase();
+}
+
+/* 以下旧実装 */
 
 export const MAX_CODE_POINT = 0x110000;
 
