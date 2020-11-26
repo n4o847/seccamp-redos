@@ -91,7 +91,7 @@ export function toDOT(
           : [automaton.initialState];
       for (let i = 0; i < initialStateList.length; i++) {
         const q = initialStateList[i];
-        const init = `init_${i + 1}`;
+        const init = `init_${i}`;
         const priority = i + 1;
         out += `    ${JSON.stringify(init)} [shape = point];\n`;
         out += `    ${JSON.stringify(init)} -> ${JSON.stringify(q)}${

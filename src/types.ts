@@ -77,6 +77,7 @@ export type DFA = {
   initialState: State;
   acceptingStateSet: Set<State>;
   transitions: TransitionMap;
+  table: Map<State, Set<State>>;
 };
 
 export type Atom = RerejsChar | RerejsEscapeClass | RerejsClass | RerejsDot;
