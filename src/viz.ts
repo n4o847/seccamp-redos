@@ -25,11 +25,13 @@ export function toDOT(
         return true;
       case 'UnorderedNFA':
         return false;
+      case 'DFA':
+        return false;
+      case 'LeafCutNFA':
+        return true;
       case 'StronglyConnectedComponentGraph':
         return false;
       case 'DirectProductGraph':
-        return false;
-      case 'DFA':
         return false;
     }
   })();

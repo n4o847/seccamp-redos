@@ -8,6 +8,7 @@ import { buildStronglyConnectedComponents } from './scc';
 import { showMessageEDA } from './eda';
 import { buildTripleDirectProductGraphs } from './tripleDirectProduct';
 import { showMessageIDA } from './ida';
+import { buildLeafCutNFA } from './cutLeaf';
 
 function main() {
   const sources: [source: string, flags?: string][] = [
@@ -28,6 +29,7 @@ function main() {
     [String.raw`[a-z][0-9a-z]*`],
     [String.raw`a[a-z]`, 'i'],
     [String.raw`a*a*`], // IDA典型例
+    [String.raw`(.*|(a|a)*)`], // 枝切り典型
   ];
 
   for (const [src, flags] of sources) {
@@ -38,23 +40,21 @@ function main() {
     console.log(`//`, src, `eliminated`);
     const nfa = eliminateEpsilonTransitions(enfa);
     console.log(toDOT(nfa));
-    console.log(`//`, src, `strongly connected components`);
-    const sccs = buildStronglyConnectedComponents(nfa);
-    console.log(`//`, src, `direct product`);
-    const dps = buildDirectProductGraphs(sccs);
-    for (const dp of dps) {
-      console.log(toDOT(dp));
-    }
-    console.log(`//`, src, `has EDA?: `, showMessageEDA(dps));
-    console.log('//', src, `triple direct product`);
-    const tdps = buildTripleDirectProductGraphs(sccs, nfa);
-    console.log(`//`, src, `has IDA?: `, showMessageIDA(tdps));
     console.log(`//`, src, `reversed`);
     const rnfa = reverseNFA(nfa);
     console.log(toDOT(rnfa));
     console.log(`//`, src, `determinized`);
     const dfa = determinize(rnfa);
     console.log(toDOT(dfa));
+    console.log(`//`, src, `cut leaf`);
+    const lcnfa = buildLeafCutNFA(nfa, dfa);
+    console.log(toDOT(lcnfa));
+    console.log(`//`, src, `strongly connected components`);
+    const sccs = buildStronglyConnectedComponents(lcnfa);
+    const dps = buildDirectProductGraphs(sccs);
+    console.log(`//`, src, `has EDA?: `, showMessageEDA(dps));
+    const tdps = buildTripleDirectProductGraphs(sccs, nfa);
+    console.log(`//`, src, `has IDA?: `, showMessageIDA(tdps));
   }
 }
 

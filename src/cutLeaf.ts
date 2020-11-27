@@ -25,7 +25,7 @@ export function buildLeafCutNFA(nfa: NonEpsilonNFA, dfa: DFA): LeafCutNFA {
     const newState = State.fromPair([nfa.initialState, q0]);
     newInitialStateSet.add(newState);
   }
-  console.log('Initial: ', newInitialStateSet);
+  // console.log('Initial: ', newInitialStateSet);
 
   // 受理状態作成、Q_fはReverseDFAの初期状態
   {
@@ -38,8 +38,8 @@ export function buildLeafCutNFA(nfa: NonEpsilonNFA, dfa: DFA): LeafCutNFA {
     }
   }
 
-  console.log('Accept:', newAcceptingStateSet);
-  console.log('Table:', table);
+  // console.log('Accept:', newAcceptingStateSet);
+  // console.log('Table:', table);
 
   /**
    * ある文字charでdfaSourceからdfaDestに遷移

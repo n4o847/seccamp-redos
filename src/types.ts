@@ -12,12 +12,14 @@ export type Automaton =
   | NonEpsilonNFA
   | UnorderedNFA
   | DFA
+  | LeafCutNFA
   | StronglyConnectedComponentGraph
   | DirectProductGraph
   | TripleDirectProductGraph;
 
 export type SCCPossibleAutomaton =
   | NonEpsilonNFA
+  | LeafCutNFA
   | DirectProductGraph
   | TripleDirectProductGraph;
 
