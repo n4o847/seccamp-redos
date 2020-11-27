@@ -9,6 +9,10 @@ export class TransitionMap {
     return this.map.get(source)?.get(char) ?? [];
   }
 
+  getTransitions(source: State): Map<Char, State[]> | undefined {
+    return this.map.get(source);
+  }
+
   add(source: State, char: Char, destination: State): void {
     let fromSource = this.map.get(source);
     if (fromSource === undefined) {
