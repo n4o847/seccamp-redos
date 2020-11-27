@@ -12,7 +12,7 @@ export function detectEDA(src: string, flags?: string): Message {
     const nfa = eliminateEpsilonTransitions(enfa);
     const sccs = buildStronglyConnectedComponents(nfa);
     const dps = buildDirectProductGraphs(sccs);
-    return showMessageEDA(dps);
+    return showMessageEDA(nfa, dps);
   } catch (e) {
     if (e instanceof Error) {
       return { status: 'Error', message: e.message };

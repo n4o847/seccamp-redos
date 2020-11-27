@@ -45,7 +45,7 @@ function main(): void {
     for (const dp of dps) {
       console.log(toDOT(dp));
     }
-    console.log(`//`, src, `has EDA?: `, showMessageEDA(dps));
+    console.log(`//`, src, `has EDA?: `, showMessageEDA(nfa, dps));
     console.log('//', src, `triple direct product`);
     const tdps = buildTripleDirectProductGraphs(sccs, nfa);
     for (const tdp of tdps) {

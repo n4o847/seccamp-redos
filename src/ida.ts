@@ -3,7 +3,7 @@ import { TripleDirectProductGraph, Message, State } from './types';
 
 export function showMessageIDA(tdps: TripleDirectProductGraph[]): Message {
   if (tdps.some((tdp) => isIDA(tdp))) {
-    return { status: 'Vulnerable', message: 'Detected IDA.' };
+    return { status: 'Vulnerable', message: 'Detected IDA.', attack: '' };
   } else {
     return { status: 'Safe', message: "Don't have IDA." };
   }
