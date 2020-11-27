@@ -15,7 +15,7 @@ function isIDA(tdp: TripleDirectProductGraph): boolean {
     // (lq, lq, rq) と (lq, rq, rq) が存在するか
     for (const [lq, cq, rq] of scc.stateList.map((s) => s.split('_'))) {
       const state = `${lq}_${rq}_${rq}` as State;
-      if (lq === cq && cq !== rq && scc.stateList.includes(state)) {
+      if (lq === cq && scc.stateList.includes(state)) {
         return true;
       }
     }
