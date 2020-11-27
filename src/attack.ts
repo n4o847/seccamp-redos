@@ -31,7 +31,7 @@ export class Attacker {
 
         if (selfLoops.length >= 2) {
           let attack = '';
-          attack += this.pathString(this.nfa.initialState, sourceLeft);
+          attack += this.getPathString(this.nfa.initialState, sourceLeft);
           {
             const loop = char ?? this.nullChar;
             attack += loop.repeat(20);
@@ -47,11 +47,11 @@ export class Attacker {
         const viaRight = getRightState(viaPair);
         if (viaLeft !== viaRight && viaLeft !== sourceLeft) {
           let attack = '';
-          attack += this.pathString(this.nfa.initialState, sourceLeft);
+          attack += this.getPathString(this.nfa.initialState, sourceLeft);
           {
             let loop = '';
-            loop += this.pathString(sourceLeft, viaLeft);
-            loop += this.pathString(viaLeft, sourceLeft);
+            loop += this.getPathString(sourceLeft, viaLeft);
+            loop += this.getPathString(viaLeft, sourceLeft);
             attack += loop.repeat(20);
           }
           attack += this.getSuffix(sourceLeft);
@@ -72,9 +72,9 @@ export class Attacker {
     for (const [lq, cq, rq] of scc.stateList.map((s) => s.split('_'))) {
       if (lq === cq && scc.stateList.includes(`${lq}_${rq}_${rq}` as State)) {
         let attack = '';
-        attack += this.pathString(this.nfa.initialState, lq as State);
+        attack += this.getPathString(this.nfa.initialState, lq as State);
         {
-          const loop = this.pathString(lq as State, rq as State);
+          const loop = this.getPathString(lq as State, rq as State);
           attack += loop.repeat(20);
         }
         attack += this.getSuffix(rq as State);
@@ -101,9 +101,9 @@ export class Attacker {
   /**
    * ある状態からある状態まで遷移する文字列を探す。
    */
-  private pathString(source: State, destination: State): string {
+  private getPathString(source: State, destination: State): string {
     return findPath(this.nfa, source, destination)
-      .map((char) => char || this.nullChar)
+      .map((char) => char ?? this.nullChar)
       .join('');
   }
 
