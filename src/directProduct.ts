@@ -1,9 +1,6 @@
-import {
-  DirectProductGraph,
-  State,
-  StronglyConnectedComponentGraph,
-} from './types';
-import { TransitionMap } from './automaton';
+import { State } from './state';
+import { TransitionMap } from './transitions';
+import { DirectProductGraph, StronglyConnectedComponentGraph } from './types';
 
 export function buildDirectProductGraphs(
   sccs: StronglyConnectedComponentGraph[],

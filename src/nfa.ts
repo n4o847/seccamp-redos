@@ -1,5 +1,6 @@
-import { EpsilonNFA, NonEpsilonNFA, State, Char } from './types';
-import { TransitionMap } from './automaton';
+import { State } from './state';
+import { TransitionMap } from './transitions';
+import { EpsilonNFA, NonEpsilonNFA, Char } from './types';
 
 /**
  * ε-NFA から ε-遷移を除去する。
