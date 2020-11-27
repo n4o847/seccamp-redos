@@ -51,7 +51,7 @@ function main(): void {
     for (const tdp of tdps) {
       console.log(toDOT(tdp));
     }
-    console.log(`//`, src, `has IDA?: `, showMessageIDA(tdps));
+    console.log(`//`, src, `has IDA?: `, showMessageIDA(nfa, tdps));
     console.log(`//`, src, `reversed`);
     const rnfa = reverseNFA(nfa);
     console.log(toDOT(rnfa));

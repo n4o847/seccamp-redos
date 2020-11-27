@@ -1,6 +1,6 @@
-import { Attacker } from './attack';
 import { buildStronglyConnectedComponents } from './scc';
 import { NonEpsilonNFA, DirectProductGraph, Message } from './types';
+import { Attacker } from './attack';
 
 /**
  * 強連結成分を一つ一つ見ていき、EDAを持つかメッセージを返す
@@ -13,7 +13,6 @@ export function showMessageEDA(
 
   for (const dp of dps) {
     const sccs = buildStronglyConnectedComponents(dp);
-
     for (const scc of sccs) {
       const attack = attacker.findExponentialAttack(scc);
       if (attack !== null) {
@@ -21,5 +20,6 @@ export function showMessageEDA(
       }
     }
   }
+
   return { status: 'Safe', message: "Don't have EDA." };
 }
