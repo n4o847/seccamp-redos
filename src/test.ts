@@ -9,7 +9,7 @@ import { showMessageEDA } from './eda';
 import { buildTripleDirectProductGraphs } from './tripleDirectProduct';
 import { showMessageIDA } from './ida';
 
-function main() {
+function main(): void {
   const sources: [source: string, flags?: string][] = [
     [String.raw`a`],
     [String.raw`\s`],
@@ -24,10 +24,10 @@ function main() {
     [String.raw`(a+)+`],
     [String.raw`(a?)?`],
     [String.raw`(\w|\d)*`],
-    [String.raw`(.*)="(.*)"`],
     [String.raw`[a-z][0-9a-z]*`],
     [String.raw`a[a-z]`, 'i'],
-    [String.raw`a*a*`], // IDA典型例
+    [String.raw`a*a*`], // IDA1
+    [String.raw`(.*)="(.*)"`], //IDA2
   ];
 
   for (const [src, flags] of sources) {
@@ -48,6 +48,9 @@ function main() {
     console.log(`//`, src, `has EDA?: `, showMessageEDA(dps));
     console.log('//', src, `triple direct product`);
     const tdps = buildTripleDirectProductGraphs(sccs, nfa);
+    for (const tdp of tdps) {
+      console.log(toDOT(tdp));
+    }
     console.log(`//`, src, `has IDA?: `, showMessageIDA(tdps));
     console.log(`//`, src, `reversed`);
     const rnfa = reverseNFA(nfa);

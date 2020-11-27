@@ -58,7 +58,6 @@ export type TripleDirectProductGraph = {
   stateList: State[];
   alphabet: Set<Char>;
   transitions: TransitionMap;
-  extraTransitions: TransitionMap;
 };
 
 export type UnorderedNFA = {
