@@ -26,22 +26,17 @@ export function buildExponentialAttack(
           }
           if (visited) {
             let attack = '';
-            attack += pathString(
-              nfa,
-              nfa.initialState,
-              new Set([sourceLeft]),
-              nullChar,
-            );
+            attack += pathString(nfa, nfa.initialState, sourceLeft, nullChar);
             {
               const loop = char ?? nullChar;
               attack += loop.repeat(20);
             }
-            attack += pathString(
-              nfa,
-              sourceLeft,
-              nfa.acceptingStateSet,
-              nullChar,
-            );
+            for (const char of [...nfa.alphabet, null]) {
+              if (nfa.transitions.get(sourceLeft, char).length === 0) {
+                attack += char ?? nullChar;
+                break;
+              }
+            }
             return attack;
           }
           visited = true;
@@ -54,24 +49,19 @@ export function buildExponentialAttack(
         const viaRight = getRightState(viaPair);
         if (viaLeft !== viaRight && viaLeft !== sourceLeft) {
           let attack = '';
-          attack += pathString(
-            nfa,
-            nfa.initialState,
-            new Set([sourceLeft]),
-            nullChar,
-          );
+          attack += pathString(nfa, nfa.initialState, sourceLeft, nullChar);
           {
             let loop = '';
-            loop += pathString(nfa, sourceLeft, new Set([viaLeft]), nullChar);
-            loop += pathString(nfa, viaLeft, new Set([sourceLeft]), nullChar);
+            loop += pathString(nfa, sourceLeft, viaLeft, nullChar);
+            loop += pathString(nfa, viaLeft, sourceLeft, nullChar);
             attack += loop.repeat(20);
           }
-          attack += pathString(
-            nfa,
-            sourceLeft,
-            nfa.acceptingStateSet,
-            nullChar,
-          );
+          for (const char of [...nfa.alphabet, null]) {
+            if (nfa.transitions.get(sourceLeft, char).length === 0) {
+              attack += char ?? nullChar;
+              break;
+            }
+          }
           return attack;
         }
       }
@@ -104,7 +94,7 @@ function getCharForNull(alphabet: Set<Char>): string {
 function pathString(
   nfa: NonEpsilonNFA,
   source: State,
-  destinations: Set<State>,
+  destination: State,
   nullChar: string,
 ): string {
   /** その状態にどの状態からどの遷移でたどり着けるか */
@@ -113,12 +103,9 @@ function pathString(
   const queue: State[] = [];
   queue.push(source);
 
-  let foundDestination: State | null = null;
-
   while (queue.length !== 0) {
     const q = queue.shift()!;
-    if (destinations.has(q)) {
-      foundDestination = q;
+    if (q === destination) {
       break;
     }
     for (const char of nfa.alphabet) {
@@ -133,13 +120,13 @@ function pathString(
   }
 
   const path: string[] = [];
-  if (foundDestination !== null) {
-    for (let q = foundDestination; q !== source; ) {
-      const [prevState, char] = referrer.get(q)!;
-      path.push(char ?? nullChar);
-      q = prevState;
-    }
-    path.reverse();
+
+  for (let q = destination; q !== source; ) {
+    const [prevState, char] = referrer.get(q)!;
+    path.push(char ?? nullChar);
+    q = prevState;
   }
+  path.reverse();
+
   return path.join('');
 }
