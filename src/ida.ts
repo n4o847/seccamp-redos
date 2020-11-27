@@ -1,5 +1,6 @@
 import { buildStronglyConnectedComponents } from './scc';
-import { TripleDirectProductGraph, Message, State } from './types';
+import { State } from './state';
+import { TripleDirectProductGraph, Message } from './types';
 
 export function showMessageIDA(tdps: TripleDirectProductGraph[]): Message {
   if (tdps.some((tdp) => isIDA(tdp))) {

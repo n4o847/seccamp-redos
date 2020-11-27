@@ -1,10 +1,6 @@
 import { getLeftState, getRightState } from './directProduct';
-import {
-  NonEpsilonNFA,
-  State,
-  Char,
-  StronglyConnectedComponentGraph,
-} from './types';
+import { State } from './state';
+import { NonEpsilonNFA, Char, StronglyConnectedComponentGraph } from './types';
 
 export function buildExponentialAttack(
   nfa: NonEpsilonNFA,
