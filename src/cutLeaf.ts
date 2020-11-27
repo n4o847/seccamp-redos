@@ -1,16 +1,9 @@
-import { TransitionMap } from './automaton';
-import { DFA, LeafCutNFA, NonEpsilonNFA, State } from './types';
+import { TransitionMap } from './transitions';
+import { DFA, LeafCutNFA, NonEpsilonNFA } from './types';
+import { State } from './state';
 
 export function buildLeafCutNFA(nfa: NonEpsilonNFA, dfa: DFA): LeafCutNFA {
   return new LeafCutNFABuilder(nfa, dfa).build();
-}
-
-export function getNFAState(state: State): State {
-  return state.split('_')[0] as State;
-}
-
-export function getDFAState(state: State): State {
-  return state.split('_')[1] as State;
 }
 
 class LeafCutNFABuilder {
@@ -23,18 +16,31 @@ class LeafCutNFABuilder {
     // 初期状態作成
     const newInitialStateSet: Set<State> = new Set();
     const newAcceptingStateSet: Set<State> = new Set();
-    for (const s of this.dfa.stateList) {
-      newInitialStateSet.add(this.createState(this.nfa.initialState, s));
-    }
+    // {q0, {q0, q1}} => [q0, Set{q0,q1}]
+    const table = new Map<State, [State, Set<State>]>();
 
-    // 受理状態作成
-    for (const ns of this.nfa.acceptingStateSet) {
-      if (this.dfa.acceptingStateSet.has(ns)) {
-        for (const ds of this.dfa.initialState) {
-          newAcceptingStateSet.add(this.createState(ns, ds as State));
+    for (const [q0, qs0] of this.dfa.table) {
+      const newStateTuple: [State, Set<State>] = [this.nfa.initialState, qs0];
+      const newSate = State.fromPair([this.nfa.initialState, q0]);
+      newInitialStateSet.add(newSate);
+      table.set(newSate, newStateTuple);
+    }
+    console.log('Initial: ', newInitialStateSet);
+
+    // FIXME: 受理状態作成(Q_fがもとのNFAのstate情報を持っている必要がある)
+    for (const ass of this.dfa.acceptingStateSet) {
+      const oneAcceptStateSet = this.dfa.table.get(ass)!;
+      for (const q of this.nfa.stateList) {
+        if (oneAcceptStateSet.has(q)) {
+          const newStateTuple: [State, Set<State>] = [q, oneAcceptStateSet];
+          const newSate = State.fromPair([q, ass]);
+          newAcceptingStateSet.add(newSate);
+          table.set(newSate, newStateTuple);
         }
       }
     }
+    console.log('Accept:', newAcceptingStateSet);
+    console.log('Table:', table);
 
     return {
       type: 'LeafCutNFA',
@@ -44,12 +50,5 @@ class LeafCutNFABuilder {
       acceptingStateSet: newAcceptingStateSet,
       transitions: this.newTransitions,
     };
-  }
-
-  createState(leftState: State, rightState: State): State {
-    const state = `${leftState}_${rightState}` as State;
-
-    this.newStateList.push(state);
-    return state;
   }
 }
