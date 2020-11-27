@@ -46,6 +46,15 @@ export type StronglyConnectedComponentGraph = {
   transitions: TransitionMap;
 };
 
+export type LeafCutNFA = {
+  type: 'LeafCutNFA';
+  stateList: State[];
+  alphabet: Set<Char>;
+  initialState: Set<State>;
+  acceptingStateSet: Set<State>;
+  transitions: TransitionMap;
+};
+
 export type DirectProductGraph = {
   type: 'DirectProductGraph';
   alphabet: Set<Char>;
