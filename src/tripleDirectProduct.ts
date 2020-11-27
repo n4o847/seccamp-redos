@@ -14,17 +14,17 @@ export function buildTripleDirectProductGraphs(
     .map((scc1, _, sccs) =>
       sccs
         .filter((scc2) => scc1 !== scc2)
-        .map((scc2) => buildTripleDirectProductGraph(scc1, scc2, nfa)),
+        .map((scc2) => buildTripleDirectProductGraph(scc1, nfa, scc2)),
     )
     .flat(1);
 }
 
 export function buildTripleDirectProductGraph(
   sccGraph1: StronglyConnectedComponentGraph,
-  sccGraph2: StronglyConnectedComponentGraph,
   nfa: SCCPossibleAutomaton,
+  sccGraph2: StronglyConnectedComponentGraph,
 ): TripleDirectProductGraph {
-  return new TripleDirectProductBuilder(sccGraph1, sccGraph2, nfa).build();
+  return new TripleDirectProductBuilder(sccGraph1, nfa, sccGraph2).build();
 }
 
 class TripleDirectProductBuilder {
@@ -34,8 +34,8 @@ class TripleDirectProductBuilder {
 
   constructor(
     private sccGraph1: StronglyConnectedComponentGraph,
-    private sccGraph2: StronglyConnectedComponentGraph,
     private nfa: SCCPossibleAutomaton,
+    private sccGraph2: StronglyConnectedComponentGraph,
   ) {}
 
   build(): TripleDirectProductGraph {
