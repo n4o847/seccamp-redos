@@ -1,6 +1,7 @@
-import { NonEpsilonNFA, UnorderedNFA, DFA, State } from './types';
-import { TransitionMap } from './automaton';
-import { equals, intersect } from './util';
+import { State } from './state';
+import { TransitionMap } from './transitions';
+import { NonEpsilonNFA, UnorderedNFA, DFA } from './types';
+import { intersect } from './util';
 
 /**
  * NFA をリバースする。優先度の情報は失われる。
@@ -20,69 +21,52 @@ export function reverseNFA(nfa: NonEpsilonNFA): UnorderedNFA {
  * 部分集合構成法を用いて NFA から DFA を構築する。
  */
 export function determinize(nfa: UnorderedNFA): DFA {
-  return new DFABuilder(nfa).build();
-}
+  const queue: [State, Set<State>][] = [];
 
-class DFABuilder {
-  private newStateList: State[] = [];
-  private newTransitions = new TransitionMap();
-  private newStateToOldStateSet: Map<State, Set<State>> = new Map();
-  private newStateId = 0;
+  const alphabet = nfa.alphabet;
+  const stateList: State[] = [];
+  const transitions = new TransitionMap();
+  const initialState = State.fromSet(nfa.initialStateSet);
+  const acceptingStateSet = new Set<State>();
+  const table = new Map<State, Set<State>>();
 
-  constructor(private nfa: UnorderedNFA) {}
+  stateList.push(initialState);
+  table.set(initialState, nfa.initialStateSet);
+  queue.push([initialState, nfa.initialStateSet]);
 
-  build(): DFA {
-    const queue: State[] = [];
-    const alphabet = this.nfa.alphabet;
-    const newInitialState = this.createState(this.nfa.initialStateSet);
-    const newAcceptingStateSet = new Set<State>();
-    queue.push(newInitialState);
-    while (queue.length !== 0) {
-      const q0 = queue.shift()!;
-      const qs0 = this.newStateToOldStateSet.get(q0)!;
-      if (intersect(qs0, this.nfa.acceptingStateSet).size !== 0) {
-        newAcceptingStateSet.add(q0);
-      }
-      for (const char of alphabet) {
-        const qs1 = new Set(
-          Array.from(qs0).flatMap((q) => this.nfa.transitions.get(q, char)),
-        );
+  while (queue.length !== 0) {
+    const [q0, qs0] = queue.shift()!;
 
-        if (qs1.size === 0) {
-          continue;
-        }
-        let q1 = this.getState(qs1);
-        if (q1 === null) {
-          q1 = this.createState(qs1);
-          queue.push(q1);
-        }
-        this.newTransitions.add(q0, char, q1);
-      }
+    if (intersect(qs0, nfa.acceptingStateSet).size !== 0) {
+      acceptingStateSet.add(q0);
     }
-    return {
-      type: 'DFA',
-      stateList: this.newStateList,
-      alphabet,
-      initialState: newInitialState,
-      acceptingStateSet: newAcceptingStateSet,
-      transitions: this.newTransitions,
-    };
-  }
 
-  getState(oldStateSet: Set<State>): State | null {
-    for (const [q, qs] of this.newStateToOldStateSet) {
-      if (equals(qs, oldStateSet)) {
-        return q;
+    for (const char of alphabet) {
+      const qs1 = new Set(
+        Array.from(qs0).flatMap((q) => nfa.transitions.get(q, char)),
+      );
+
+      if (qs1.size === 0) {
+        continue;
       }
+
+      const q1 = State.fromSet(qs1);
+      if (!stateList.includes(q1)) {
+        stateList.push(q1);
+        table.set(q1, qs1);
+        queue.push([q1, qs1]);
+      }
+
+      transitions.add(q0, char, q1);
     }
-    return null;
   }
-
-  createState(oldStateSet: Set<State>): State {
-    const state = `Q${this.newStateId++}` as State;
-    this.newStateList.push(state);
-
-    this.newStateToOldStateSet.set(state, oldStateSet);
-    return state;
-  }
+  return {
+    type: 'DFA',
+    stateList,
+    alphabet,
+    initialState,
+    acceptingStateSet,
+    transitions,
+    table,
+  };
 }
