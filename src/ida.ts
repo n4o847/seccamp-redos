@@ -1,5 +1,5 @@
 import { buildStronglyConnectedComponents } from './scc';
-import { TripleDirectProductGraph, Message } from './types';
+import { TripleDirectProductGraph, Message, State } from './types';
 
 export function showMessageIDA(tdps: TripleDirectProductGraph[]): Message {
   if (tdps.some((tdp) => isIDA(tdp))) {
@@ -12,10 +12,10 @@ export function showMessageIDA(tdps: TripleDirectProductGraph[]): Message {
 function isIDA(tdp: TripleDirectProductGraph): boolean {
   const sccs = buildStronglyConnectedComponents(tdp);
   return sccs.some((scc) => {
-    // 追加辺 (q1, q2, q2) => (q1, q1, q2) に対応する辺 (q1, q1, q2) => (q1, q2, q2) が強連結成分内の辺として存在するかどうかを判定
-
-    for (const [q, char, d] of tdp.extraTransitions) {
-      if (scc.transitions.get(d, char).includes(q)) {
+    // (lq, lq, rq) と (lq, rq, rq) が存在するか
+    for (const [lq, cq, rq] of scc.stateList.map((s) => s.split('_'))) {
+      const state = `${lq}_${rq}_${rq}` as State;
+      if (lq === cq && scc.stateList.includes(state)) {
         return true;
       }
     }
