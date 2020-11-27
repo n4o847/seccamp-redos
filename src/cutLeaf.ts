@@ -50,13 +50,19 @@ export function buildLeafCutNFA(nfa: NonEpsilonNFA, dfa: DFA): LeafCutNFA {
     for (const q0 of dfa.table.get(dfaDest)!) {
       const nfaDestList = nfa.transitions.get(q0, char);
       for (const q1 of nfaDestList) {
-        if (dfaSourceSet.has(q1)) {
+        if (
+          dfaSourceSet.has(q1) &&
+          !newTransitions.has(
+            State.fromPair([q0, dfaDest]),
+            char,
+            State.fromPair([q1, dfaSource]),
+          )
+        ) {
           newTransitions.add(
             State.fromPair([q0, dfaDest]),
             char,
             State.fromPair([q1, dfaSource]),
           );
-          break;
         }
       }
     }

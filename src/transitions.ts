@@ -13,6 +13,10 @@ export class TransitionMap {
     return this.map.get(source);
   }
 
+  has(source: State, char: Char, destination: State): boolean {
+    return this.get(source, char).includes(destination);
+  }
+
   add(source: State, char: Char, destination: State): void {
     let fromSource = this.map.get(source);
     if (fromSource === undefined) {
