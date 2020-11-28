@@ -47,8 +47,6 @@ class EpsilonEliminatedNFABuilder {
         }
       }
     }
-
-    console.log(newInitialState);
     return {
       type: 'NonEpsilonNFA',
       stateList: this.newStateList,

@@ -9,8 +9,8 @@ export class TransitionMap {
     return this.map.get(source)?.get(char) ?? [];
   }
 
-  getTransitions(source: State): Map<Char, State[]> | undefined {
-    return this.map.get(source);
+  getTransitions(source: State): Map<Char, State[]> | [] {
+    return this.map.get(source) ?? [];
   }
 
   // あるcharの遷移を持つsourceとdestinationの組を全て取り出す

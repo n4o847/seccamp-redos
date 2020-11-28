@@ -1,5 +1,5 @@
 import { TransitionMap } from './transitions';
-import { DFA, PruningNFA, NonEpsilonNFA } from './types';
+import { DFA, PruningNFA, NonEpsilonNFA, Char } from './types';
 import { State } from './state';
 
 /**
@@ -62,11 +62,65 @@ export function prune(nfa: NonEpsilonNFA, dfa: DFA): PruningNFA {
     }
   }
 
-  return {
+  return removeUnreachableState({
     type: 'PruningNFA',
     stateList: newStateList,
     alphabet: nfa.alphabet,
     initialStateSet: newInitialStateSet,
+    acceptingStateSet: newAcceptingStateSet,
+    transitions: newTransitions,
+  });
+}
+
+/**
+ * 初期状態から幅優先探索をして到達できる点のみのNFAを作成
+ * 到達不能なStateを除去し、そのState内における遷移とアルファベットのみを追加
+ * TODO: Viz謝表示時を修正(本来二重でない辺を二重に描いてしまう)
+ */
+function removeUnreachableState(pnfa: PruningNFA): PruningNFA {
+  const newStateList: State[] = [];
+  const newAcceptingStateSet: Set<State> = new Set();
+  const newAlphabet: Set<Char> = new Set();
+  const newTransitions = new TransitionMap();
+
+  const queue: State[] = Array.from(pnfa.initialStateSet);
+  const visited: Map<State, boolean> = new Map();
+
+  pnfa.stateList.forEach((state) => {
+    visited.set(state, false);
+  });
+
+  while (queue.length !== 0) {
+    const source = queue.shift()!;
+    visited.set(source, true);
+    newStateList.push(source);
+
+    if (pnfa.acceptingStateSet.has(source)) {
+      newAcceptingStateSet.add(source);
+    }
+
+    for (const [_, dests] of pnfa.transitions.getTransitions(source)!) {
+      for (const dest of dests) {
+        if (!visited.get(dest)!) {
+          queue.push(dest);
+        }
+      }
+    }
+  }
+
+  const newStateSet = new Set(newStateList);
+  for (const [q0, char, q1] of pnfa.transitions) {
+    if (newStateSet.has(q0) && newStateSet.has(q1)) {
+      newTransitions.add(q0, char, q1);
+      newAlphabet.add(char);
+    }
+  }
+
+  return {
+    type: 'PruningNFA',
+    stateList: newStateList,
+    alphabet: newAlphabet,
+    initialStateSet: pnfa.initialStateSet,
     acceptingStateSet: newAcceptingStateSet,
     transitions: newTransitions,
   };
