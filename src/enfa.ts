@@ -94,6 +94,19 @@ class EpsilonNFABuilder {
           }
           const q0 = childNFAs[0].initialState;
           const f0 = childNFAs[childNFAs.length - 1].acceptingState;
+
+          // 先頭submatchのため
+          if (node.children[0].type !== 'LineBegin' && node.range[0] === 0) {
+            this.addTransition(q0, null, q0);
+          }
+          // 終端submatchのため
+          if (
+            node.children[node.children.length - 1].type !== 'LineEnd' &&
+            node.range[1] === this.pattern.range[1]
+          ) {
+            this.addTransition(f0, null, f0);
+          }
+
           return {
             initialState: q0,
             acceptingState: f0,
@@ -139,10 +152,35 @@ class EpsilonNFABuilder {
           acceptingState: f0,
         };
       }
+      case 'LineBegin': {
+        if (node.type === 'LineBegin' && node.range[0] > 0) {
+          throw new Error('illgal use LineBegin');
+        }
+        const q0 = this.createState();
+        const f0 = this.createState();
+        this.addTransition(q0, null, f0);
+        return {
+          initialState: q0,
+          acceptingState: f0,
+        };
+      }
+      case 'LineEnd': {
+        if (
+          node.type === 'LineEnd' &&
+          node.range[1] !== this.pattern.range[1]
+        ) {
+          throw new Error('illgal use LineEnd');
+        }
+        const q0 = this.createState();
+        const f0 = this.createState();
+        this.addTransition(q0, null, f0);
+        return {
+          initialState: q0,
+          acceptingState: f0,
+        };
+      }
       case 'Repeat':
       case 'WordBoundary':
-      case 'LineBegin':
-      case 'LineEnd':
       case 'LookAhead':
       case 'LookBehind': {
         throw new Error('unimplemented');
