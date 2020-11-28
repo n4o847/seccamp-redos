@@ -10,7 +10,7 @@ import { buildTripleDirectProductGraphs } from './tripleDirectProduct';
 import { showMessageIDA } from './ida';
 import { prune } from './pruning';
 
-function main() {
+function main(): void {
   const sources: [source: string, flags?: string][] = [
     [String.raw`a`],
     [String.raw`\s`],
@@ -25,10 +25,10 @@ function main() {
     [String.raw`(a+)+`],
     [String.raw`(a?)?`],
     [String.raw`(\w|\d)*`],
-    [String.raw`(.*)="(.*)"`],
     [String.raw`[a-z][0-9a-z]*`],
     [String.raw`a[a-z]`, 'i'],
-    [String.raw`a*a*`], // IDA典型例
+    [String.raw`a*a*`], // IDA1
+    [String.raw`(.*)="(.*)"`], //IDA2
     [String.raw`(.*|(a|a)*)`], // 枝切り典型
   ];
 
