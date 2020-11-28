@@ -7,7 +7,9 @@
   "scripts": {
     "build": "tsc -p .",
     "test": "ts-node src/test.ts",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "lint": "eslint \"./**/*.{js,ts}\"",
+    "lint:fix": "eslint \"./**/*.{js,ts}\" --fix"
   },
   "dependencies": {
     "rerejs": "^0.2.0"
