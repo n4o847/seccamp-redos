@@ -41,20 +41,19 @@ export function prune(nfa: NonEpsilonNFA, dfa: DFA): PruningNFA {
   // console.log('Accept:', newAcceptingStateSet);
   // console.log('Table:', table);
 
-  /**
-   * ある文字charでdfaSourceからdfaDestに遷移
-   * dfaDestに含まれるNFA上のq0からchar遷移において到達できる一番最初の点q1への辺を追加
-   */
-  for (const [dfaSource, char, dfaDest] of dfa.transitions) {
-    const dfaSourceSet = dfa.table.get(dfaSource)!;
-    for (const q0 of dfa.table.get(dfaDest)!) {
-      const nfaDestList = nfa.transitions.get(q0, char);
-      for (const q1 of nfaDestList) {
-        if (dfaSourceSet.has(q1)) {
+  // There is a transition `q1 --(char)-> qs` in ordered NFA, and
+  // there is a transition `Q1 <-(char)-- Q2` in reversed DFA.
+  // The result NFA contains a transition `(q1, Q1) --(char)-> (qs(i), Q2)`
+  // if and only if there is no `qs(j)` (`j < i`) in `Q2`.
+  for (const [q1, char] of nfa.transitions.getSourceChar()) {
+    const qs = nfa.transitions.get(q1, char);
+    for (const [Q2, Q1] of dfa.transitions.getTuplesFromChar(char)) {
+      for (const qsi of qs) {
+        if (dfa.table.get(Q2)!.has(qsi)) {
           newTransitions.add(
-            State.fromPair([q0, dfaDest]),
+            State.fromPair([q1, Q1]),
             char,
-            State.fromPair([q1, dfaSource]),
+            State.fromPair([qsi, Q2]),
           );
           break;
         }

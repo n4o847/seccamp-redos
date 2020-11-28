@@ -1,3 +1,4 @@
+import { stat } from 'fs';
 import { State } from './state';
 import { Char } from './types';
 
@@ -11,6 +12,27 @@ export class TransitionMap {
 
   getTransitions(source: State): Map<Char, State[]> | undefined {
     return this.map.get(source);
+  }
+
+  // あるcharの遷移を持つsourceとdestinationの組を全て取り出す
+  getTuplesFromChar(a: Char): [State, State][] {
+    const retTuples: [State, State][] = [];
+    for (const [source, char, destination] of this) {
+      if (a === char) {
+        retTuples.push([source, destination]);
+      }
+    }
+    return retTuples;
+  }
+
+  getSourceChar(): [State, Char][] {
+    const retTuples: [State, Char][] = [];
+    for (const source of this.map.keys()) {
+      for (const char of this.map.get(source)!.keys()) {
+        retTuples.push([source, char]);
+      }
+    }
+    return retTuples;
   }
 
   has(source: State, char: Char, destination: State): boolean {
