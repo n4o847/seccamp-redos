@@ -69,6 +69,16 @@ class EpsilonNFABuilder {
           this.addTransition(q0, null, q1);
           this.addTransition(f1, null, f0);
         }
+
+        // 先頭submatchのため
+        if (node.range[0] === 0) {
+          this.addTransition(q0, null, q0);
+        }
+        // 終端submatchのため
+        if (node.range[1] === this.pattern.range[1]) {
+          this.addTransition(f0, null, f0);
+        }
+
         return {
           initialState: q0,
           acceptingState: f0,
@@ -147,6 +157,16 @@ class EpsilonNFABuilder {
           }
           this.addTransition(f1, null, f0);
         }
+
+        // 先頭submatchのため
+        if (node.range[0] === 0) {
+          this.addTransition(q0, null, q0);
+        }
+        // 終端submatchのため
+        if (node.range[1] === this.pattern.range[1]) {
+          this.addTransition(f0, null, f0);
+        }
+
         return {
           initialState: q0,
           acceptingState: f0,
