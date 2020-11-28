@@ -1,8 +1,8 @@
 name: reviewdog
 
 on:
-  pull_request
-  push
+  - pull_request
+  - push
 
 
 jobs:
