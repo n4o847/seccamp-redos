@@ -21,6 +21,7 @@
 	"no-cond-assign": 2,
 	"no-dupe-args": 2,
 	"no-dupe-keys": 2,
-	"no-empty": 2
+	"no-empty": 2,
+	"no-unused-vars": [2, {"argsIgnorePattern": "^_"}]
   }
 }
