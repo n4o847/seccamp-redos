@@ -1,11 +1,11 @@
 import { TransitionMap } from './transitions';
-import { DFA, PruningNFA, NonEpsilonNFA, Char } from './types';
+import { DFA, PrunedNFA, NonEpsilonNFA, Char } from './types';
 import { State } from './state';
 
 /**
  * NFAとReverseDFAから枝刈りされたNFAを作成
  */
-export function prune(nfa: NonEpsilonNFA, dfa: DFA): PruningNFA {
+export function prune(nfa: NonEpsilonNFA, dfa: DFA): PrunedNFA {
   const newStateList: State[] = [];
   const newTransitions = new TransitionMap();
   const newInitialStateSet: Set<State> = new Set();
@@ -63,7 +63,7 @@ export function prune(nfa: NonEpsilonNFA, dfa: DFA): PruningNFA {
   }
 
   return removeUnreachableState({
-    type: 'PruningNFA',
+    type: 'PrunedNFA',
     stateList: newStateList,
     alphabet: nfa.alphabet,
     initialStateSet: newInitialStateSet,
@@ -77,7 +77,7 @@ export function prune(nfa: NonEpsilonNFA, dfa: DFA): PruningNFA {
  * 到達不能なStateを除去し、そのState内における遷移とアルファベットのみを追加
  * TODO: Viz謝表示時を修正(本来二重でない辺を二重に描いてしまう)
  */
-function removeUnreachableState(pnfa: PruningNFA): PruningNFA {
+function removeUnreachableState(pnfa: PrunedNFA): PrunedNFA {
   const newStateList: State[] = [];
   const newAcceptingStateSet: Set<State> = new Set();
   const newAlphabet: Set<Char> = new Set();
@@ -117,7 +117,7 @@ function removeUnreachableState(pnfa: PruningNFA): PruningNFA {
   }
 
   return {
-    type: 'PruningNFA',
+    type: 'PrunedNFA',
     stateList: newStateList,
     alphabet: newAlphabet,
     initialStateSet: pnfa.initialStateSet,

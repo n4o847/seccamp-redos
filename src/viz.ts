@@ -27,7 +27,7 @@ export function toDOT(
         return false;
       case 'DFA':
         return false;
-      case 'PruningNFA':
+      case 'PrunedNFA':
         return true;
       case 'StronglyConnectedComponentGraph':
         return false;
@@ -88,7 +88,7 @@ export function toDOT(
         out += `    ${JSON.stringify(q)} [shape = ${shape}];\n`;
       }
       const initialStateList =
-        automaton.type === 'UnorderedNFA' || automaton.type === 'PruningNFA'
+        automaton.type === 'UnorderedNFA' || automaton.type === 'PrunedNFA'
           ? Array.from(automaton.initialStateSet)
           : [automaton.initialState];
       for (let i = 0; i < initialStateList.length; i++) {

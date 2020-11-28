@@ -12,14 +12,14 @@ export type Automaton =
   | NonEpsilonNFA
   | UnorderedNFA
   | DFA
-  | PruningNFA
+  | PrunedNFA
   | StronglyConnectedComponentGraph
   | DirectProductGraph
   | TripleDirectProductGraph;
 
 export type SCCPossibleAutomaton =
   | NonEpsilonNFA
-  | PruningNFA
+  | PrunedNFA
   | DirectProductGraph
   | TripleDirectProductGraph;
 
@@ -60,8 +60,8 @@ export type DFA = {
   table: Map<State, Set<State>>;
 };
 
-export type PruningNFA = {
-  type: 'PruningNFA';
+export type PrunedNFA = {
+  type: 'PrunedNFA';
   stateList: State[];
   alphabet: Set<Char>;
   initialStateSet: Set<State>;
