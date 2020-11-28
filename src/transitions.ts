@@ -1,4 +1,3 @@
-import { stat } from 'fs';
 import { State } from './state';
 import { Char } from './types';
 
@@ -25,7 +24,7 @@ export class TransitionMap {
     return retTuples;
   }
 
-  getSourceChar(): [State, Char][] {
+  getSourceCharTuples(): [State, Char][] {
     const retTuples: [State, Char][] = [];
     for (const source of this.map.keys()) {
       for (const char of this.map.get(source)!.keys()) {

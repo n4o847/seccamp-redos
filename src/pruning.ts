@@ -2,6 +2,9 @@ import { TransitionMap } from './transitions';
 import { DFA, PruningNFA, NonEpsilonNFA } from './types';
 import { State } from './state';
 
+/**
+ * NFAとReverseDFAから枝刈りされたNFAを作成
+ */
 export function prune(nfa: NonEpsilonNFA, dfa: DFA): PruningNFA {
   const newStateList: State[] = [];
   const newTransitions = new TransitionMap();
@@ -25,7 +28,6 @@ export function prune(nfa: NonEpsilonNFA, dfa: DFA): PruningNFA {
     const newState = State.fromPair([nfa.initialState, q0]);
     newInitialStateSet.add(newState);
   }
-  // console.log('Initial: ', newInitialStateSet);
 
   // 受理状態作成、Q_fはReverseDFAの初期状態
   {
@@ -38,23 +40,22 @@ export function prune(nfa: NonEpsilonNFA, dfa: DFA): PruningNFA {
     }
   }
 
-  // console.log('Accept:', newAcceptingStateSet);
-  // console.log('Table:', table);
-
   // There is a transition `q1 --(char)-> qs` in ordered NFA, and
   // there is a transition `Q1 <-(char)-- Q2` in reversed DFA.
   // The result NFA contains a transition `(q1, Q1) --(char)-> (qs(i), Q2)`
   // if and only if there is no `qs(j)` (`j < i`) in `Q2`.
-  for (const [q1, char] of nfa.transitions.getSourceChar()) {
+  for (const [q1, char] of nfa.transitions.getSourceCharTuples()) {
     const qs = nfa.transitions.get(q1, char);
     for (const [Q2, Q1] of dfa.transitions.getTuplesFromChar(char)) {
+      const Q2Set = dfa.table.get(Q2)!;
       for (const qsi of qs) {
-        if (dfa.table.get(Q2)!.has(qsi)) {
-          newTransitions.add(
-            State.fromPair([q1, Q1]),
-            char,
-            State.fromPair([qsi, Q2]),
-          );
+        newTransitions.add(
+          State.fromPair([q1, Q1]),
+          char,
+          State.fromPair([qsi, Q2]),
+        );
+
+        if (Q2Set.has(qsi)) {
           break;
         }
       }
@@ -65,7 +66,7 @@ export function prune(nfa: NonEpsilonNFA, dfa: DFA): PruningNFA {
     type: 'PruningNFA',
     stateList: newStateList,
     alphabet: nfa.alphabet,
-    initialState: newInitialStateSet,
+    initialStateSet: newInitialStateSet,
     acceptingStateSet: newAcceptingStateSet,
     transitions: newTransitions,
   };

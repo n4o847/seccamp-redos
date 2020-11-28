@@ -40,6 +40,9 @@ class EpsilonNFABuilder {
       }
     }
 
+    // DFA構築時非受理状態作成のために必要
+    this.alphabet.add(null);
+
     return {
       type: 'EpsilonNFA',
       alphabet: this.alphabet,

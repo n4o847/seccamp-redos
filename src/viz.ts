@@ -88,7 +88,7 @@ export function toDOT(
         out += `    ${JSON.stringify(q)} [shape = ${shape}];\n`;
       }
       const initialStateList =
-        automaton.type === 'UnorderedNFA'
+        automaton.type === 'UnorderedNFA' || automaton.type === 'PruningNFA'
           ? Array.from(automaton.initialStateSet)
           : [automaton.initialState];
       for (let i = 0; i < initialStateList.length; i++) {

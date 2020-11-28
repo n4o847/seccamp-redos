@@ -46,10 +46,6 @@ export function determinize(nfa: UnorderedNFA): DFA {
         Array.from(qs0).flatMap((q) => nfa.transitions.get(q, char)),
       );
 
-      if (qs1.size === 0) {
-        continue;
-      }
-
       const q1 = State.fromSet(qs1);
       if (!stateList.includes(q1)) {
         stateList.push(q1);
