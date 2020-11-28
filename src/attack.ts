@@ -168,7 +168,7 @@ function findUnacceptablePath(nfa: NonEpsilonNFA, source: State): Char[] {
   const referrer = new Map<State, [source: State, char: Char]>();
 
   const queue: [State, Set<State>][] = [];
-  queue.push([source, new Set([source])]);
+  queue.push([State.fromSet(new Set([source])), new Set([source])]);
 
   let foundDestination: State | null = null;
 
