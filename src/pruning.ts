@@ -1,8 +1,8 @@
 import { TransitionMap } from './transitions';
-import { DFA, LeafCutNFA, NonEpsilonNFA } from './types';
+import { DFA, PruningNFA, NonEpsilonNFA } from './types';
 import { State } from './state';
 
-export function buildLeafCutNFA(nfa: NonEpsilonNFA, dfa: DFA): LeafCutNFA {
+export function prune(nfa: NonEpsilonNFA, dfa: DFA): PruningNFA {
   const newStateList: State[] = [];
   const newTransitions = new TransitionMap();
   const newInitialStateSet: Set<State> = new Set();
@@ -50,26 +50,20 @@ export function buildLeafCutNFA(nfa: NonEpsilonNFA, dfa: DFA): LeafCutNFA {
     for (const q0 of dfa.table.get(dfaDest)!) {
       const nfaDestList = nfa.transitions.get(q0, char);
       for (const q1 of nfaDestList) {
-        if (
-          dfaSourceSet.has(q1) &&
-          !newTransitions.has(
-            State.fromPair([q0, dfaDest]),
-            char,
-            State.fromPair([q1, dfaSource]),
-          )
-        ) {
+        if (dfaSourceSet.has(q1)) {
           newTransitions.add(
             State.fromPair([q0, dfaDest]),
             char,
             State.fromPair([q1, dfaSource]),
           );
+          break;
         }
       }
     }
   }
 
   return {
-    type: 'LeafCutNFA',
+    type: 'PruningNFA',
     stateList: newStateList,
     alphabet: nfa.alphabet,
     initialState: newInitialStateSet,

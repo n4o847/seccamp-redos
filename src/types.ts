@@ -12,14 +12,14 @@ export type Automaton =
   | NonEpsilonNFA
   | UnorderedNFA
   | DFA
-  | LeafCutNFA
+  | PruningNFA
   | StronglyConnectedComponentGraph
   | DirectProductGraph
   | TripleDirectProductGraph;
 
 export type SCCPossibleAutomaton =
   | NonEpsilonNFA
-  | LeafCutNFA
+  | PruningNFA
   | DirectProductGraph
   | TripleDirectProductGraph;
 
@@ -48,8 +48,8 @@ export type StronglyConnectedComponentGraph = {
   transitions: TransitionMap;
 };
 
-export type LeafCutNFA = {
-  type: 'LeafCutNFA';
+export type PruningNFA = {
+  type: 'PruningNFA';
   stateList: State[];
   alphabet: Set<Char>;
   initialState: Set<State>;

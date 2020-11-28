@@ -8,7 +8,7 @@ import { buildStronglyConnectedComponents } from './scc';
 import { showMessageEDA } from './eda';
 import { buildTripleDirectProductGraphs } from './tripleDirectProduct';
 import { showMessageIDA } from './ida';
-import { buildLeafCutNFA } from './cutLeaf';
+import { prune } from './pruning';
 
 function main() {
   const sources: [source: string, flags?: string][] = [
@@ -47,7 +47,7 @@ function main() {
     const dfa = determinize(rnfa);
     console.log(toDOT(dfa));
     console.log(`//`, src, `cut leaf`);
-    const lcnfa = buildLeafCutNFA(nfa, dfa);
+    const lcnfa = prune(nfa, dfa);
     console.log(toDOT(lcnfa));
     console.log(`//`, src, `strongly connected components`);
     const sccs = buildStronglyConnectedComponents(lcnfa);

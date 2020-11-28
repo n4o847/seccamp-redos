@@ -27,7 +27,7 @@ export function toDOT(
         return false;
       case 'DFA':
         return false;
-      case 'LeafCutNFA':
+      case 'PruningNFA':
         return true;
       case 'StronglyConnectedComponentGraph':
         return false;
