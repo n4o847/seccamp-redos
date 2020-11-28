@@ -53,7 +53,7 @@ function main(): void {
     const sccs = buildStronglyConnectedComponents(lcnfa);
     const dps = buildDirectProductGraphs(sccs);
     console.log(`//`, src, `has EDA?: `, showMessageEDA(dps));
-    const tdps = buildTripleDirectProductGraphs(sccs, nfa);
+    const tdps = buildTripleDirectProductGraphs(sccs, lcnfa);
     console.log(`//`, src, `has IDA?: `, showMessageIDA(tdps));
   }
 }
