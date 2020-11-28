@@ -44,9 +44,9 @@ export function prune(nfa: NonEpsilonNFA, dfa: DFA): PrunedNFA {
   // there is a transition `Q1 <-(char)-- Q2` in reversed DFA.
   // The result NFA contains a transition `(q1, Q1) --(char)-> (qs(i), Q2)`
   // if and only if there is no `qs(j)` (`j < i`) in `Q2`.
-  for (const [q1, char] of nfa.transitions.getSourceCharTuples()) {
+  for (const [q1, char] of nfa.transitions.keys()) {
     const qs = nfa.transitions.get(q1, char);
-    for (const [Q2, Q1] of dfa.transitions.getTuplesFromChar(char)) {
+    for (const [Q2, Q1] of getTuplesFromChar(dfa.transitions, char)) {
       const Q2Set = dfa.table.get(Q2)!;
       for (const qsi of qs) {
         newTransitions.add(
@@ -99,7 +99,7 @@ function removeUnreachableState(pnfa: PrunedNFA): PrunedNFA {
       newAcceptingStateSet.add(source);
     }
 
-    for (const [_, dests] of pnfa.transitions.getTransitions(source)!) {
+    for (const [_, dests] of pnfa.transitions.getTransitions(source)) {
       for (const dest of dests) {
         if (!visited.get(dest)!) {
           queue.push(dest);
@@ -124,4 +124,18 @@ function removeUnreachableState(pnfa: PrunedNFA): PrunedNFA {
     acceptingStateSet: newAcceptingStateSet,
     transitions: newTransitions,
   };
+}
+
+// あるcharの遷移を持つsourceとdestinationの組を全て取り出す
+function getTuplesFromChar(
+  transitions: TransitionMap,
+  a: Char,
+): [State, State][] {
+  const retTuples: [State, State][] = [];
+  for (const [source, char, destination] of transitions) {
+    if (a === char) {
+      retTuples.push([source, destination]);
+    }
+  }
+  return retTuples;
 }
