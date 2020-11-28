@@ -29,7 +29,8 @@ function main(): void {
     [String.raw`a[a-z]`, 'i'],
     [String.raw`a*a*`], // IDA1
     [String.raw`(.*)="(.*)"`], //IDA2
-    [String.raw`(.*|(a|a)*)`], // 枝切り典型
+    [String.raw`(.*|(a|a)*)`], // 枝切り1
+    [String.raw`(a|a)*?.*`], // 枝切り2
   ];
 
   for (const [src, flags] of sources) {
