@@ -14,8 +14,19 @@ export function detectReDoS(src: string, flags?: string): Message {
     const nfa = eliminateEpsilonTransitions(enfa);
     const sccs = buildStronglyConnectedComponents(nfa);
     const dps = buildDirectProductGraphs(sccs);
+    const messageEDA = showMessageEDA(dps);
+    if (messageEDA.status === 'Vulnerable') {
+      return messageEDA;
+    }
     const tdps = buildTripleDirectProductGraphs(sccs, nfa);
-    return showMessageEDA(dps) || showMessageIDA(tdps);
+    const messageIDA = showMessageIDA(tdps);
+    if (messageIDA.status === 'Vulnerable') {
+      return messageIDA;
+    }
+    return {
+      status: 'Safe',
+      message: "Don't have EDA nor IDA",
+    } as Message;
   } catch (e) {
     if (e instanceof Error) {
       return { status: 'Error', message: e.message };
