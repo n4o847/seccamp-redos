@@ -1,6 +1,7 @@
 import { getLeftState, getRightState } from './directProduct';
 import { State } from './state';
 import { NonEpsilonNFA, Char, StronglyConnectedComponentGraph } from './types';
+import { intersect } from './util';
 
 export class Attacker {
   private nfa: NonEpsilonNFA;
@@ -108,21 +109,17 @@ export class Attacker {
   }
 
   /**
-   * (TODO)
    * EDA/IDA 構造からバックトラックの起こるような状態へ遷移する⽂字列を探す。
    */
   private getSuffix(source: State): string {
-    for (const char of [...this.nfa.alphabet, null]) {
-      if (this.nfa.transitions.get(source, char).length === 0) {
-        return char ?? this.nullChar;
-      }
-    }
-    return '';
+    return findUnacceptablePath(this.nfa, source)
+      .map((char) => char ?? this.nullChar)
+      .join('');
   }
 }
 
 /**
- * NFA 上である状態からある状態までの経路 (Char の配列) を幅優先探索で復元する。
+ * NFA 上である状態からある状態までの経路 (Char の配列) を幅優先探索する。
  */
 function findPath(
   nfa: NonEpsilonNFA,
@@ -159,6 +156,56 @@ function findPath(
     q = prevState;
   }
   path.reverse();
+
+  return path;
+}
+
+/**
+ * NFA 上である状態から非受理状態までの経路 (Char の配列) を幅優先探索する。
+ */
+function findUnacceptablePath(nfa: NonEpsilonNFA, source: State): Char[] {
+  /** その状態にどの状態からどの遷移でたどり着けるか */
+  const referrer = new Map<State, [source: State, char: Char]>();
+
+  const queue: [State, Set<State>][] = [];
+  queue.push([source, new Set([source])]);
+
+  let foundDestination: State | null = null;
+
+  while (queue.length !== 0) {
+    const [q0, qs0] = queue.shift()!;
+
+    if (intersect(qs0, nfa.acceptingStateSet).size === 0) {
+      foundDestination = q0;
+      break;
+    }
+
+    // その他の文字も含める
+    for (const char of [...nfa.alphabet, null]) {
+      /** qs0 の各状態から char で到達可能な状態の集合の和集合 */
+      const qs1 = new Set(
+        Array.from(qs0).flatMap((q) => nfa.transitions.get(q, char)),
+      );
+
+      const q1 = State.fromSet(qs1);
+
+      if (!referrer.has(q1)) {
+        referrer.set(q1, [q0, char]);
+        queue.push([q1, qs1]);
+      }
+    }
+  }
+
+  const path: Char[] = [];
+
+  if (foundDestination !== null) {
+    for (let q = foundDestination; q !== source; ) {
+      const [prevState, char] = referrer.get(q)!;
+      path.push(char);
+      q = prevState;
+    }
+    path.reverse();
+  }
 
   return path;
 }
