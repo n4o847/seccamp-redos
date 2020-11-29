@@ -1,5 +1,6 @@
 import { Pattern, Node } from 'rerejs';
-import { EpsilonNFA, State, NullableTransition, Char, Atom } from './types';
+import { State } from './state';
+import { EpsilonNFA, NullableTransition, Char, Atom } from './types';
 import { extendAlphabet, getChars } from './char';
 
 /**
@@ -38,6 +39,9 @@ class EpsilonNFABuilder {
         }
       }
     }
+
+    // DFA構築時非受理状態作成のために必要
+    this.alphabet.add(null);
 
     return {
       type: 'EpsilonNFA',

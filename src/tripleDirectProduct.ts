@@ -1,10 +1,10 @@
+import { State } from './state';
+import { TransitionMap } from './transitions';
 import {
   TripleDirectProductGraph,
   StronglyConnectedComponentGraph,
   SCCPossibleAutomaton,
-  State,
 } from './types';
-import { TransitionMap } from './automaton';
 
 export function buildTripleDirectProductGraphs(
   sccs: StronglyConnectedComponentGraph[],

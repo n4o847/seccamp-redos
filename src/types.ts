@@ -4,20 +4,22 @@ import {
   Class as RerejsClass,
   Dot as RerejsDot,
 } from 'rerejs';
-
-import { TransitionMap } from './automaton';
+import { State } from './state';
+import { TransitionMap } from './transitions';
 
 export type Automaton =
   | EpsilonNFA
   | NonEpsilonNFA
   | UnorderedNFA
   | DFA
+  | PrunedNFA
   | StronglyConnectedComponentGraph
   | DirectProductGraph
   | TripleDirectProductGraph;
 
 export type SCCPossibleAutomaton =
   | NonEpsilonNFA
+  | PrunedNFA
   | DirectProductGraph
   | TripleDirectProductGraph;
 
@@ -35,6 +37,34 @@ export type NonEpsilonNFA = {
   stateList: State[];
   alphabet: Set<Char>;
   initialState: State;
+  acceptingStateSet: Set<State>;
+  transitions: TransitionMap;
+};
+
+export type UnorderedNFA = {
+  type: 'UnorderedNFA';
+  stateList: State[];
+  alphabet: Set<Char>;
+  initialStateSet: Set<State>;
+  acceptingStateSet: Set<State>;
+  transitions: TransitionMap;
+};
+
+export type DFA = {
+  type: 'DFA';
+  stateList: State[];
+  alphabet: Set<Char>;
+  initialState: State;
+  acceptingStateSet: Set<State>;
+  transitions: TransitionMap;
+  table: Map<State, Set<State>>;
+};
+
+export type PrunedNFA = {
+  type: 'PrunedNFA';
+  stateList: State[];
+  alphabet: Set<Char>;
+  initialStateSet: Set<State>;
   acceptingStateSet: Set<State>;
   transitions: TransitionMap;
 };
@@ -59,33 +89,6 @@ export type TripleDirectProductGraph = {
   alphabet: Set<Char>;
   transitions: TransitionMap;
 };
-
-export type UnorderedNFA = {
-  type: 'UnorderedNFA';
-  stateList: State[];
-  alphabet: Set<Char>;
-  initialStateSet: Set<State>;
-  acceptingStateSet: Set<State>;
-  transitions: TransitionMap;
-};
-
-export type DFA = {
-  type: 'DFA';
-  stateList: State[];
-  alphabet: Set<Char>;
-  initialState: State;
-  acceptingStateSet: Set<State>;
-  transitions: TransitionMap;
-};
-
-/**
- * 通常の string と区別する。
- * State となる文字列は以下のフォーマットを満たす必要がある。
- * - 単なる状態のとき、'q' + (非負整数) となる。
- * - 状態のタプルを新たに状態とするとき、各要素を '_' で連結したものとなる。
- * - 状態の集合を新たに状態とするとき、未定。
- */
-export type State = string & { __stateBrand: never };
 
 export type Atom = RerejsChar | RerejsEscapeClass | RerejsClass | RerejsDot;
 
