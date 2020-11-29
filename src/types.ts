@@ -89,6 +89,7 @@ export type TripleDirectProductGraph = {
   stateList: State[];
   alphabet: Set<Char>;
   transitions: TransitionMap;
+  table: Map<State, [State, State, State]>;
 };
 
 export type Atom = RerejsChar | RerejsEscapeClass | RerejsClass | RerejsDot;
