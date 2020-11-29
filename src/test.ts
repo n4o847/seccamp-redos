@@ -35,7 +35,7 @@ function main(): void {
 
   for (const [src, flags] of sources) {
     console.log(`//`, src, flags);
-    const pat = new Parser(src).parse();
+    const pat = new Parser(src, flags).parse();
     const enfa = buildEpsilonNFA(pat);
     console.log(toDOT(enfa));
     console.log(`//`, src, `eliminated`);
@@ -47,10 +47,9 @@ function main(): void {
     console.log(`//`, src, `determinized`);
     const dfa = determinize(rnfa);
     console.log(toDOT(dfa));
-    console.log(`//`, src, `cut leaf`);
+    console.log(`//`, src, `pruned`);
     const lcnfa = prune(nfa, dfa);
     console.log(toDOT(lcnfa));
-    console.log(`//`, src, `strongly connected components`);
     const sccs = buildStronglyConnectedComponents(lcnfa);
     const dps = buildDirectProductGraphs(sccs);
     console.log(`//`, src, `has EDA?: `, showMessageEDA(dps));

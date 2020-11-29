@@ -78,22 +78,16 @@ export function prune(nfa: NonEpsilonNFA, dfa: DFA): PrunedNFA {
  * TODO: Viz謝表示時を修正(本来二重でない辺を二重に描いてしまう)
  */
 function removeUnreachableState(pnfa: PrunedNFA): PrunedNFA {
-  const newStateList: State[] = [];
   const newAcceptingStateSet: Set<State> = new Set();
   const newAlphabet: Set<Char> = new Set();
   const newTransitions = new TransitionMap();
 
   const queue: State[] = Array.from(pnfa.initialStateSet);
-  const visited: Map<State, boolean> = new Map();
-
-  pnfa.stateList.forEach((state) => {
-    visited.set(state, false);
-  });
+  // 到達可能なStateを入れたSet
+  const newStatesSet: Set<State> = new Set(pnfa.initialStateSet);
 
   while (queue.length !== 0) {
     const source = queue.shift()!;
-    visited.set(source, true);
-    newStateList.push(source);
 
     if (pnfa.acceptingStateSet.has(source)) {
       newAcceptingStateSet.add(source);
@@ -101,16 +95,16 @@ function removeUnreachableState(pnfa: PrunedNFA): PrunedNFA {
 
     for (const [_, dests] of pnfa.transitions.getTransitions(source)) {
       for (const dest of dests) {
-        if (!visited.get(dest)!) {
+        if (!newStatesSet.has(dest)) {
+          newStatesSet.add(dest);
           queue.push(dest);
         }
       }
     }
   }
 
-  const newStateSet = new Set(newStateList);
   for (const [q0, char, q1] of pnfa.transitions) {
-    if (newStateSet.has(q0) && newStateSet.has(q1)) {
+    if (newStatesSet.has(q0) && newStatesSet.has(q1)) {
       newTransitions.add(q0, char, q1);
       newAlphabet.add(char);
     }
@@ -118,7 +112,7 @@ function removeUnreachableState(pnfa: PrunedNFA): PrunedNFA {
 
   return {
     type: 'PrunedNFA',
-    stateList: newStateList,
+    stateList: Array.from(newStatesSet),
     alphabet: newAlphabet,
     initialStateSet: pnfa.initialStateSet,
     acceptingStateSet: newAcceptingStateSet,
