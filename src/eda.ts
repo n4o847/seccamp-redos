@@ -1,4 +1,3 @@
-import { getLeftState, getRightState } from './directProduct';
 import { buildStronglyConnectedComponents } from './scc';
 import { DirectProductGraph, Message } from './types';
 
@@ -30,9 +29,10 @@ function isEDA(dp: DirectProductGraph): boolean {
       }
     }
 
-    const lrSame = scc.stateList.filter(
-      (state) => getLeftState(state) === getRightState(state),
-    );
+    const lrSame = scc.stateList.filter((state) => {
+      const [lq, rq] = dp.table.get(state)!;
+      return lq === rq;
+    });
     // (n, n), (m, k) (m !== k)が存在(すべて同じじゃないが全て異なるわけではない)
     return lrSame.length < scc.stateList.length && lrSame.length > 0;
   });

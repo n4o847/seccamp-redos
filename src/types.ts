@@ -81,6 +81,7 @@ export type DirectProductGraph = {
   alphabet: Set<Char>;
   stateList: State[];
   transitions: TransitionMap;
+  table: Map<State, [State, State]>;
 };
 
 export type TripleDirectProductGraph = {
