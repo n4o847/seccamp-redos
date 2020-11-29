@@ -75,7 +75,6 @@ export function prune(nfa: NonEpsilonNFA, dfa: DFA): PrunedNFA {
 /**
  * 初期状態から幅優先探索をして到達できる点のみのNFAを作成
  * 到達不能なStateを除去し、そのState内における遷移とアルファベットのみを追加
- * TODO: Viz謝表示時を修正(本来二重でない辺を二重に描いてしまう)
  */
 function removeUnreachableState(pnfa: PrunedNFA): PrunedNFA {
   const newAcceptingStateSet: Set<State> = new Set();
