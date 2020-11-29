@@ -67,6 +67,7 @@ export type PrunedNFA = {
   initialStateSet: Set<State>;
   acceptingStateSet: Set<State>;
   transitions: TransitionMap;
+  table: Map<State, [State, State]>;
 };
 
 export type StronglyConnectedComponentGraph = {
