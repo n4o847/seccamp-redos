@@ -78,8 +78,8 @@ export type StronglyConnectedComponentGraph = {
 
 export type DirectProductGraph = {
   type: 'DirectProductGraph';
-  alphabet: Set<Char>;
   stateList: State[];
+  alphabet: Set<Char>;
   transitions: TransitionMap;
   table: Map<State, [State, State]>;
 };
