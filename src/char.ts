@@ -30,7 +30,7 @@ export function extendAlphabet(
 ): void {
   switch (node.type) {
     case 'Char': {
-      let char = node.raw;
+      let char = String.fromCodePoint(node.value);
       if (flagSet.ignoreCase) {
         char = canonicalizeChar(char);
       }
@@ -113,7 +113,7 @@ export function getChars(
 ): Set<Char> {
   switch (node.type) {
     case 'Char': {
-      let char = node.raw;
+      let char = String.fromCodePoint(node.value);
       if (flagSet.ignoreCase) {
         char = canonicalizeChar(char);
       }
@@ -284,7 +284,7 @@ export function createCharSet(node: Atom, flagSet: FlagSet): CharSet {
 }
 
 export function canonicalize(value: number): number {
-  return String.fromCharCode(value).toUpperCase().charCodeAt(0);
+  return String.fromCodePoint(value).toUpperCase().codePointAt(0)!;
 }
 
 export function intersectCharSets(...charSets: CharSet[]): CharSet {
