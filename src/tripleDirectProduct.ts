@@ -77,8 +77,11 @@ class TripleDirectProductBuilder {
     };
   }
 
-  // 直積は前の状態をスペース区切りに
-  createState(leftState: State, centerState: State, rightState: State): State {
+  private createState(
+    leftState: State,
+    centerState: State,
+    rightState: State,
+  ): State {
     const newState = State.fromTriple([leftState, centerState, rightState]);
     if (!this.newStateList.includes(newState)) {
       this.newStateList.push(newState);
