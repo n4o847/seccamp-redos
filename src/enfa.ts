@@ -65,7 +65,11 @@ class EpsilonNFABuilder {
     switch (node.type) {
       case 'Disjunction': {
         const q0 = this.createState();
-        const childNFAs = node.children.map((child) => this.buildChild(child));
+        const childNFAs = node.children
+          .filter(
+            (child) => child.type !== 'LineBegin' && child.type !== 'LineEnd',
+          )
+          .map((child) => this.buildChild(child));
         const f0 = this.createState();
         for (const childNFA of childNFAs) {
           const q1 = childNFA.initialState;
@@ -89,9 +93,11 @@ class EpsilonNFABuilder {
             acceptingState: f0,
           };
         } else {
-          const childNFAs = node.children.map((child) =>
-            this.buildChild(child),
-          );
+          const childNFAs = node.children
+            .filter(
+              (child) => child.type !== 'LineBegin' && child.type !== 'LineEnd',
+            )
+            .map((child) => this.buildChild(child));
           for (let i = 0; i < childNFAs.length - 1; i++) {
             const f1 = childNFAs[i].acceptingState;
             const q2 = childNFAs[i + 1].initialState;
@@ -171,15 +177,17 @@ class EpsilonNFABuilder {
       }
       case 'LineBegin':
       case 'LineEnd': {
-        const q0 = this.createState();
-        const f0 = this.createState();
-        this.addTransition(q0, null, f0);
+        const q0 = this.throughState();
         return {
           initialState: q0,
-          acceptingState: f0,
+          acceptingState: q0,
         };
       }
     }
+  }
+  private throughState(): State {
+    const state = `q${this.stateId}` as State;
+    return state;
   }
 
   private createState(): State {
