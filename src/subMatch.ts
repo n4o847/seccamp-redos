@@ -1,8 +1,7 @@
-import { Pattern, Node, Group } from 'rerejs';
+import { Pattern, Node } from 'rerejs';
 import { State } from './state';
-import { EpsilonNFA, NullableTransition, Char, Atom } from './types';
+import { EpsilonNFA, NullableTransition, Char } from './types';
 import { extendAlphabet, getChars } from './char';
-import { getDiffieHellman } from 'crypto';
 
 /**
  * 構築された ε-NFA に対し、submatchの遷移を追加する
@@ -15,8 +14,8 @@ export function addSubMatchTransitions(
 }
 
 class SubMatchTransitonsBuilder {
-  constructor(private pattern: Pattern, private enfa: EpsilonNFA) { }
-  
+  constructor(private pattern: Pattern, private enfa: EpsilonNFA) {}
+
   build(): EpsilonNFA {
     switch (this.pattern.child.type) {
       case 'Capture':
@@ -39,24 +38,25 @@ class SubMatchTransitonsBuilder {
         return this.enfa;
       }
     }
-    throw new Error("error in submatch");
+    throw new Error('error in submatch');
   }
 
-  private buildChild(
-    node: Node,
-  ): void {
+  private buildChild(node: Node): void {
     switch (node.type) {
       case 'Disjunction': {
         // 始端subMatch　(非貪欲)
-        this.enfa.transitions.get(this.enfa.initialState)!.forEach((t, index) => {
-          const nodeChild = node.children[index];
-          if (
-            (nodeChild.type === 'Sequence' && nodeChild.children[0].type !== 'LineBegin') ||
-            nodeChild.type === 'Char'
-          ) {
-            this.setNonGreedyTransitions(t.destination);
-          }
-        }); 
+        this.enfa.transitions
+          .get(this.enfa.initialState)!
+          .forEach((t, index) => {
+            const nodeChild = node.children[index];
+            if (
+              (nodeChild.type === 'Sequence' &&
+                nodeChild.children[0].type !== 'LineBegin') ||
+              nodeChild.type === 'Char'
+            ) {
+              this.setNonGreedyTransitions(t.destination);
+            }
+          });
 
         // 終端subMatch (貪欲)
         const sources = this.getSourcesOfFinalTransitions();
@@ -64,7 +64,8 @@ class SubMatchTransitonsBuilder {
           const nodeChild: Node = node.children[index];
           if (
             (nodeChild.type === 'Sequence' &&
-              nodeChild.children[nodeChild.children.length - 1].type !== 'LineEnd') ||
+              nodeChild.children[nodeChild.children.length - 1].type !==
+                'LineEnd') ||
             nodeChild.type === 'Char'
           ) {
             this.addDotTransition(q);
@@ -84,8 +85,8 @@ class SubMatchTransitonsBuilder {
         if (node.type !== 'Sequence' || node.children[0].type !== 'LineBegin') {
           this.setNonGreedyTransitions(this.enfa.initialState);
         }
-        
-        // 終端subMatch (貪欲)   
+
+        // 終端subMatch (貪欲)
         if (
           node.type !== 'Sequence' ||
           node.children[node.children.length - 1].type !== 'LineEnd'
@@ -95,7 +96,7 @@ class SubMatchTransitonsBuilder {
         return;
       }
     }
-    throw new Error("error in submatch");
+    throw new Error('error in submatch');
   }
 
   private setNonGreedyTransitions(d: State): void {
@@ -121,10 +122,10 @@ class SubMatchTransitonsBuilder {
       }
     }
     return sources;
-  }  
-  
+  }
+
   private getDotChars(): Set<Char> {
-    const node: Node = { type: 'Dot', range: [1,1] };
+    const node: Node = { type: 'Dot', range: [1, 1] };
     extendAlphabet(this.enfa.alphabet, node, this.pattern.flagSet);
     return getChars(this.enfa.alphabet, node, this.pattern.flagSet);
   }
@@ -132,7 +133,9 @@ class SubMatchTransitonsBuilder {
   private addDotTransition(s: State): void {
     const chars = this.getDotChars();
     for (const c of chars) {
-      this.enfa.transitions.get(s)!.push({ epsilon: false, char: c, destination: s });
+      this.enfa.transitions
+        .get(s)!
+        .push({ epsilon: false, char: c, destination: s });
     }
   }
 }
