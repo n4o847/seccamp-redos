@@ -9,6 +9,7 @@ import { showMessageEDA } from './eda';
 import { buildTripleDirectProductGraphs } from './tripleDirectProduct';
 import { showMessageIDA } from './ida';
 import { prune } from './pruning';
+import { addSubMatchTransitions } from './subMatch';
 
 function main(): void {
   const sources: [source: string, flags?: string][] = [
@@ -16,6 +17,7 @@ function main(): void {
     [String.raw`\s`],
     [String.raw`a|b`],
     [String.raw`ab`],
+    [String.raw`^ab$`],
     [String.raw`a*`],
     [String.raw`a*?`],
     [String.raw`(?:)`],
@@ -31,13 +33,15 @@ function main(): void {
     [String.raw`(.*)="(.*)"`], //IDA2
     [String.raw`(.*|(a|a)*)`], // 枝切り1
     [String.raw`(a|a)*?.*`], // 枝切り2
+    [String.raw`^a|b$|aa`],
   ];
 
   for (const [src, flags] of sources) {
     console.log(`//`, src, flags);
     const pat = new Parser(src, flags).parse();
     const enfa = buildEpsilonNFA(pat);
-    console.log(toDOT(enfa));
+    const enfa_s = addSubMatchTransitions(pat, enfa);
+    console.log(toDOT(enfa_s));
     console.log(`//`, src, `eliminated`);
     const nfa = eliminateEpsilonTransitions(enfa);
     console.log(toDOT(nfa));
