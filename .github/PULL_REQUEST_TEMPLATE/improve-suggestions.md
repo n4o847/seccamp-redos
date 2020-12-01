@@ -1,11 +1,11 @@
 ---
-name: '新機能提案・改善提案 / Improvement Suggestions'
+name: '新機能追加・改善等 / Improvement Suggestions'
 about: '新しい機能の追加や、リファクタ等に関するPull Requestはこちらから'
 labels: improvement
 ---
 <!-- PRを送る前に、その修正内容が'feature/'下で作成されていることを確認する、また、PR先のbranchについても'develop'であることを確認する -->
 
-## 解決する Issue(Bug)
+## 解決する Issue
 <!-- 基本的にはIssueを立ててからブランチを作り、PRを送る流れなので、解決するIssueを'close'の後ろに記載する
 こうすることによって、PRをマージした際に自動でIssueを閉じてくれる、Linked Issueを設定することができる -->
 - close #0
