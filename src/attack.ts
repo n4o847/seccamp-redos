@@ -1,4 +1,3 @@
-import { getLeftState, getRightState } from './directProduct';
 import { State } from './state';
 import { NonEpsilonNFA, Char, StronglyConnectedComponentGraph } from './types';
 import { intersect } from './util';
@@ -15,12 +14,14 @@ export class Attacker {
   /**
    * EDA 構造を見つけ、それに対する攻撃文字列を生成する。
    */
-  findExponentialAttack(scc: StronglyConnectedComponentGraph): string | null {
+  findExponentialAttack(
+    scc: StronglyConnectedComponentGraph,
+    table: Map<State, [State, State]>,
+  ): string | null {
     for (const source of scc.stateList) {
-      const sourceLeft = getLeftState(source);
-      const souceRight = getRightState(source);
+      const [sourceLeft, sourceRight] = table.get(source)!;
 
-      if (sourceLeft !== souceRight) {
+      if (sourceLeft !== sourceRight) {
         continue;
       }
 
@@ -44,8 +45,8 @@ export class Attacker {
 
       // (q1, q1) → (q2, q3) → (q1, q1) where q2 ≠ q3 を検出
       for (const viaPair of scc.stateList) {
-        const viaLeft = getLeftState(viaPair);
-        const viaRight = getRightState(viaPair);
+        const [viaLeft, viaRight] = table.get(viaPair)!;
+
         if (viaLeft !== viaRight && viaLeft !== sourceLeft) {
           let attack = '';
           attack += this.getPathString(this.nfa.initialState, sourceLeft);
@@ -68,17 +69,20 @@ export class Attacker {
   /**
    * IDA 構造を見つけ、それに対する攻撃文字列を生成する。
    */
-  findPolynomialAttack(scc: StronglyConnectedComponentGraph): string | null {
+  findPolynomialAttack(
+    scc: StronglyConnectedComponentGraph,
+    table: Map<State, [State, State, State]>,
+  ): string | null {
     // (lq, lq, rq) と (lq, rq, rq) が存在するか
-    for (const [lq, cq, rq] of scc.stateList.map((s) => s.split('_'))) {
-      if (lq === cq && scc.stateList.includes(`${lq}_${rq}_${rq}` as State)) {
+    for (const [lq, cq, rq] of scc.stateList.map((s) => table.get(s)!)) {
+      if (lq === cq && scc.stateList.includes(State.fromTriple([lq, rq, rq]))) {
         let attack = '';
-        attack += this.getPathString(this.nfa.initialState, lq as State);
+        attack += this.getPathString(this.nfa.initialState, lq);
         {
-          const loop = this.getPathString(lq as State, rq as State);
+          const loop = this.getPathString(lq, rq);
           attack += loop.repeat(20);
         }
-        attack += this.getSuffix(rq as State);
+        attack += this.getSuffix(rq);
         return attack;
       }
     }

@@ -14,7 +14,7 @@ export function showMessageEDA(
   for (const dp of dps) {
     const sccs = buildStronglyConnectedComponents(dp);
     for (const scc of sccs) {
-      const attack = attacker.findExponentialAttack(scc);
+      const attack = attacker.findExponentialAttack(scc, dp.table);
       if (attack !== null) {
         return { status: 'Vulnerable', message: 'Detected EDA.', attack };
       }

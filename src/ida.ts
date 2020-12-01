@@ -11,7 +11,7 @@ export function showMessageIDA(
   for (const tdp of tdps) {
     const sccs = buildStronglyConnectedComponents(tdp);
     for (const scc of sccs) {
-      const attack = attacker.findPolynomialAttack(scc);
+      const attack = attacker.findPolynomialAttack(scc, tdp.table);
       if (attack !== null) {
         return { status: 'Vulnerable', message: 'Detected IDA.', attack };
       }
