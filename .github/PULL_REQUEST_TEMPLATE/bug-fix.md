@@ -1,5 +1,5 @@
 ---
-name: 'バグ修正 / bug fix'
+name: 'バグ修正 / Bug Fix'
 about: 'バグ修正のPull Requestはこちらから'
 labels: bugfix
 ---
