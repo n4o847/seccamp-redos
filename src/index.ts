@@ -1,10 +1,13 @@
 import { Parser } from 'rerejs';
+import { buildEpsilonNFA } from './enfa';
+import { eliminateEpsilonTransitions } from './nfa';
+import { reverseNFA, determinize } from './dfa';
+import { prune } from './pruning';
+import { buildStronglyConnectedComponents } from './scc';
 import { buildDirectProductGraphs } from './directProduct';
 import { showMessageEDA } from './eda';
 import { buildTripleDirectProductGraphs } from './tripleDirectProduct';
 import { showMessageIDA } from './ida';
-import { buildEpsilonNFA, eliminateEpsilonTransitions } from './lib';
-import { buildStronglyConnectedComponents } from './scc';
 import { Message } from './types';
 
 export function detectReDoS(src: string, flags?: string): Message {
@@ -12,14 +15,17 @@ export function detectReDoS(src: string, flags?: string): Message {
     const pat = new Parser(src, flags).parse();
     const enfa = buildEpsilonNFA(pat);
     const nfa = eliminateEpsilonTransitions(enfa);
-    const sccs = buildStronglyConnectedComponents(nfa);
+    const rnfa = reverseNFA(nfa);
+    const dfa = determinize(rnfa);
+    const pnfa = prune(nfa, dfa);
+    const sccs = buildStronglyConnectedComponents(pnfa);
     const dps = buildDirectProductGraphs(sccs);
-    const messageEDA = showMessageEDA(nfa, dps);
+    const messageEDA = showMessageEDA(pnfa, dps);
     if (messageEDA.status === 'Vulnerable') {
       return messageEDA;
     }
-    const tdps = buildTripleDirectProductGraphs(sccs, nfa);
-    const messageIDA = showMessageIDA(nfa, tdps);
+    const tdps = buildTripleDirectProductGraphs(sccs, pnfa);
+    const messageIDA = showMessageIDA(pnfa, tdps);
     if (messageIDA.status === 'Vulnerable') {
       return messageIDA;
     }

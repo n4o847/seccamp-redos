@@ -2,13 +2,13 @@ import { Parser } from 'rerejs';
 import { buildEpsilonNFA } from './enfa';
 import { eliminateEpsilonTransitions } from './nfa';
 import { reverseNFA, determinize } from './dfa';
-import { toDOT } from './viz';
-import { buildDirectProductGraphs } from './directProduct';
+import { prune } from './pruning';
 import { buildStronglyConnectedComponents } from './scc';
+import { buildDirectProductGraphs } from './directProduct';
 import { showMessageEDA } from './eda';
 import { buildTripleDirectProductGraphs } from './tripleDirectProduct';
 import { showMessageIDA } from './ida';
-import { prune } from './pruning';
+import { toDOT } from './viz';
 
 function main(): void {
   const sources: [source: string, flags?: string][] = [
