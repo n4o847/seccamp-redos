@@ -69,6 +69,7 @@ export function prune(nfa: NonEpsilonNFA, dfa: DFA): PrunedNFA {
     initialStateSet: newInitialStateSet,
     acceptingStateSet: newAcceptingStateSet,
     transitions: newTransitions,
+    table: table,
   });
 }
 
@@ -80,6 +81,7 @@ function removeUnreachableState(pnfa: PrunedNFA): PrunedNFA {
   const newAcceptingStateSet: Set<State> = new Set();
   const newAlphabet: Set<Char> = new Set();
   const newTransitions = new TransitionMap();
+  const newTable: Map<State, [State, State]> = new Map();
 
   const queue: State[] = Array.from(pnfa.initialStateSet);
   // 到達可能なStateを入れたSet
@@ -102,6 +104,11 @@ function removeUnreachableState(pnfa: PrunedNFA): PrunedNFA {
     }
   }
 
+  // newTableの更新
+  for (const state of newStatesSet) {
+    newTable.set(state, pnfa.table.get(state)!);
+  }
+
   for (const [q0, char, q1] of pnfa.transitions) {
     if (newStatesSet.has(q0) && newStatesSet.has(q1)) {
       newTransitions.add(q0, char, q1);
@@ -116,6 +123,7 @@ function removeUnreachableState(pnfa: PrunedNFA): PrunedNFA {
     initialStateSet: pnfa.initialStateSet,
     acceptingStateSet: newAcceptingStateSet,
     transitions: newTransitions,
+    table: newTable,
   };
 }
 

@@ -67,6 +67,7 @@ export type PrunedNFA = {
   initialStateSet: Set<State>;
   acceptingStateSet: Set<State>;
   transitions: TransitionMap;
+  table: Map<State, [State, State]>;
 };
 
 export type StronglyConnectedComponentGraph = {
@@ -78,9 +79,10 @@ export type StronglyConnectedComponentGraph = {
 
 export type DirectProductGraph = {
   type: 'DirectProductGraph';
-  alphabet: Set<Char>;
   stateList: State[];
+  alphabet: Set<Char>;
   transitions: TransitionMap;
+  table: Map<State, [State, State]>;
 };
 
 export type TripleDirectProductGraph = {
@@ -88,6 +90,7 @@ export type TripleDirectProductGraph = {
   stateList: State[];
   alphabet: Set<Char>;
   transitions: TransitionMap;
+  table: Map<State, [State, State, State]>;
 };
 
 export type Atom = RerejsChar | RerejsEscapeClass | RerejsClass | RerejsDot;
