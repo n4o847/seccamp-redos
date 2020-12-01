@@ -1,5 +1,5 @@
 ---
-name: 'バグ修正 / bug fix'
+name: 'バグ修正 / Bug Fix'
 about: '修正必須なバグや問題の起票はこちらから'
 labels: bug
 ---
