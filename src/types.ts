@@ -18,7 +18,6 @@ export type Automaton =
   | TripleDirectProductGraph;
 
 export type SCCPossibleAutomaton =
-  | NonEpsilonNFA
   | PrunedNFA
   | DirectProductGraph
   | TripleDirectProductGraph;
