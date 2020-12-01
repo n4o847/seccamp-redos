@@ -48,13 +48,13 @@ function main(): void {
     const dfa = determinize(rnfa);
     console.log(toDOT(dfa));
     console.log(`//`, src, `pruned`);
-    const lcnfa = prune(nfa, dfa);
-    console.log(toDOT(lcnfa));
-    const sccs = buildStronglyConnectedComponents(lcnfa);
+    const pnfa = prune(nfa, dfa);
+    console.log(toDOT(pnfa));
+    const sccs = buildStronglyConnectedComponents(pnfa);
     const dps = buildDirectProductGraphs(sccs);
-    console.log(`//`, src, `has EDA?: `, showMessageEDA(lcnfa, dps));
-    const tdps = buildTripleDirectProductGraphs(sccs, lcnfa);
-    console.log(`//`, src, `has IDA?: `, showMessageIDA(lcnfa, tdps));
+    console.log(`//`, src, `has EDA?: `, showMessageEDA(pnfa, dps));
+    const tdps = buildTripleDirectProductGraphs(sccs, pnfa);
+    console.log(`//`, src, `has IDA?: `, showMessageIDA(pnfa, tdps));
   }
 }
 
