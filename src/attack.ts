@@ -1,13 +1,13 @@
 import { State } from './state';
-import { NonEpsilonNFA, Char, StronglyConnectedComponentGraph } from './types';
+import { Char, PrunedNFA, StronglyConnectedComponentGraph } from './types';
 import { intersect } from './util';
 
 export class Attacker {
-  private nfa: NonEpsilonNFA;
+  private pnfa: PrunedNFA;
   private nullChar: string;
 
-  constructor(nfa: NonEpsilonNFA) {
-    this.nfa = nfa;
+  constructor(pnfa: PrunedNFA) {
+    this.pnfa = pnfa;
     this.nullChar = this.getCharForNull();
   }
 
@@ -33,7 +33,7 @@ export class Attacker {
 
         if (selfLoops.length >= 2) {
           let attack = '';
-          attack += this.getPathString(this.nfa.initialState, sourceLeft);
+          attack += this.getPathString(this.pnfa.initialStateSet, sourceLeft);
           {
             const loop = char ?? this.nullChar;
             attack += loop.repeat(20);
@@ -49,7 +49,7 @@ export class Attacker {
 
         if (viaLeft !== viaRight && viaLeft !== sourceLeft) {
           let attack = '';
-          attack += this.getPathString(this.nfa.initialState, sourceLeft);
+          attack += this.getPathString(this.pnfa.initialStateSet, sourceLeft);
           {
             let loop = '';
             loop += this.getPathString(sourceLeft, viaLeft);
@@ -77,7 +77,7 @@ export class Attacker {
     for (const [lq, cq, rq] of scc.stateList.map((s) => table.get(s)!)) {
       if (lq === cq && scc.stateList.includes(State.fromTriple([lq, rq, rq]))) {
         let attack = '';
-        attack += this.getPathString(this.nfa.initialState, lq);
+        attack += this.getPathString(this.pnfa.initialStateSet, lq);
         {
           const loop = this.getPathString(lq, rq);
           attack += loop.repeat(20);
@@ -97,7 +97,7 @@ export class Attacker {
   private getCharForNull(): string {
     for (let c = 0x00; ; c++) {
       const s = String.fromCharCode(c);
-      if (!this.nfa.alphabet.has(s)) {
+      if (!this.pnfa.alphabet.has(s)) {
         return s;
       }
     }
@@ -106,8 +106,11 @@ export class Attacker {
   /**
    * ある状態からある状態まで遷移する文字列を探す。
    */
-  private getPathString(source: State, destination: State): string {
-    return findPath(this.nfa, source, destination)
+  private getPathString(
+    source: State | Set<State>,
+    destination: State,
+  ): string {
+    return findPath(this.pnfa, source, destination)
       .map((char) => char ?? this.nullChar)
       .join('');
   }
@@ -116,7 +119,7 @@ export class Attacker {
    * EDA/IDA 構造からバックトラックの起こるような状態へ遷移する⽂字列を探す。
    */
   private getSuffix(source: State): string {
-    return findUnacceptablePath(this.nfa, source)
+    return findUnacceptablePath(this.pnfa, source)
       .map((char) => char ?? this.nullChar)
       .join('');
   }
@@ -126,23 +129,26 @@ export class Attacker {
  * NFA 上である状態からある状態までの経路 (Char の配列) を幅優先探索する。
  */
 function findPath(
-  nfa: NonEpsilonNFA,
-  source: State,
+  pnfa: PrunedNFA,
+  source: State | Set<State>,
   destination: State,
 ): Char[] {
   /** その状態にどの状態からどの遷移でたどり着けるか */
   const referrer = new Map<State, [source: State, char: Char]>();
 
   const queue: State[] = [];
-  queue.push(source);
+
+  const initialStateSet = new Set(source instanceof Set ? source : [source]);
+
+  queue.push(...initialStateSet);
 
   while (queue.length !== 0) {
     const q = queue.shift()!;
     if (q === destination) {
       break;
     }
-    for (const char of nfa.alphabet) {
-      for (const d of nfa.transitions.get(q, char)) {
+    for (const char of pnfa.alphabet) {
+      for (const d of pnfa.transitions.get(q, char)) {
         if (referrer.has(d)) {
           continue;
         }
@@ -154,7 +160,7 @@ function findPath(
 
   const path: Char[] = [];
 
-  for (let q = destination; q !== source; ) {
+  for (let q = destination; !initialStateSet.has(q); ) {
     const [prevState, char] = referrer.get(q)!;
     path.push(char);
     q = prevState;
@@ -167,7 +173,7 @@ function findPath(
 /**
  * NFA 上である状態から非受理状態までの経路 (Char の配列) を幅優先探索する。
  */
-function findUnacceptablePath(nfa: NonEpsilonNFA, source: State): Char[] {
+function findUnacceptablePath(pnfa: PrunedNFA, source: State): Char[] {
   /** その状態にどの状態からどの遷移でたどり着けるか */
   const referrer = new Map<State, [source: State, char: Char]>();
 
@@ -183,16 +189,16 @@ function findUnacceptablePath(nfa: NonEpsilonNFA, source: State): Char[] {
   while (queue.length !== 0) {
     const [q0, qs0] = queue.shift()!;
 
-    if (intersect(qs0, nfa.acceptingStateSet).size === 0) {
+    if (intersect(qs0, pnfa.acceptingStateSet).size === 0) {
       foundDestination = q0;
       break;
     }
 
     // その他の文字も含める
-    for (const char of [...nfa.alphabet, null]) {
+    for (const char of [...pnfa.alphabet, null]) {
       /** qs0 の各状態から char で到達可能な状態の集合の和集合 */
       const qs1 = new Set(
-        Array.from(qs0).flatMap((q) => nfa.transitions.get(q, char)),
+        Array.from(qs0).flatMap((q) => pnfa.transitions.get(q, char)),
       );
 
       const q1 = State.fromSet(qs1);

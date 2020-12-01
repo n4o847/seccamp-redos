@@ -1,12 +1,12 @@
 import { buildStronglyConnectedComponents } from './scc';
-import { NonEpsilonNFA, TripleDirectProductGraph, Message } from './types';
+import { PrunedNFA, TripleDirectProductGraph, Message } from './types';
 import { Attacker } from './attack';
 
 export function showMessageIDA(
-  nfa: NonEpsilonNFA,
+  pnfa: PrunedNFA,
   tdps: TripleDirectProductGraph[],
 ): Message {
-  const attacker = new Attacker(nfa);
+  const attacker = new Attacker(pnfa);
 
   for (const tdp of tdps) {
     const sccs = buildStronglyConnectedComponents(tdp);

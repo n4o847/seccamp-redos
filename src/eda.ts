@@ -1,15 +1,15 @@
 import { buildStronglyConnectedComponents } from './scc';
-import { NonEpsilonNFA, DirectProductGraph, Message } from './types';
+import { PrunedNFA, DirectProductGraph, Message } from './types';
 import { Attacker } from './attack';
 
 /**
  * 強連結成分を一つ一つ見ていき、EDAを持つかメッセージを返す
  */
 export function showMessageEDA(
-  nfa: NonEpsilonNFA,
+  pnfa: PrunedNFA,
   dps: DirectProductGraph[],
 ): Message {
-  const attacker = new Attacker(nfa);
+  const attacker = new Attacker(pnfa);
 
   for (const dp of dps) {
     const sccs = buildStronglyConnectedComponents(dp);
