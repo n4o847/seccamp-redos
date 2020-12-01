@@ -23,50 +23,46 @@ export function reverseNFA(nfa: NonEpsilonNFA): UnorderedNFA {
 export function determinize(nfa: UnorderedNFA): DFA {
   const queue: [State, Set<State>][] = [];
 
-  const alphabet = nfa.alphabet;
-  const stateList: State[] = [];
-  const transitions = new TransitionMap();
-  const initialState = State.fromSet(nfa.initialStateSet);
-  const acceptingStateSet = new Set<State>();
+  const newStateList: State[] = [];
+  const newTransitions = new TransitionMap();
+  const newInitialState = State.fromSet(nfa.initialStateSet);
+  const newAcceptingStateSet = new Set<State>();
   const table = new Map<State, Set<State>>();
 
-  stateList.push(initialState);
-  table.set(initialState, nfa.initialStateSet);
-  queue.push([initialState, nfa.initialStateSet]);
+  newStateList.push(newInitialState);
+  table.set(newInitialState, nfa.initialStateSet);
+  queue.push([newInitialState, nfa.initialStateSet]);
 
   while (queue.length !== 0) {
     const [q0, qs0] = queue.shift()!;
 
     if (intersect(qs0, nfa.acceptingStateSet).size !== 0) {
-      acceptingStateSet.add(q0);
+      newAcceptingStateSet.add(q0);
     }
 
-    for (const char of alphabet) {
+    for (const char of nfa.alphabet) {
       const qs1 = new Set(
         Array.from(qs0).flatMap((q) => nfa.transitions.get(q, char)),
       );
 
-      if (qs1.size === 0) {
-        continue;
-      }
-
       const q1 = State.fromSet(qs1);
-      if (!stateList.includes(q1)) {
-        stateList.push(q1);
+      if (!newStateList.includes(q1)) {
+        newStateList.push(q1);
         table.set(q1, qs1);
         queue.push([q1, qs1]);
       }
 
-      transitions.add(q0, char, q1);
+      newTransitions.add(q0, char, q1);
     }
   }
+
   return {
     type: 'DFA',
-    stateList,
-    alphabet,
-    initialState,
-    acceptingStateSet,
-    transitions,
+    stateList: newStateList,
+    alphabet: nfa.alphabet,
+    initialState: newInitialState,
+    acceptingStateSet: newAcceptingStateSet,
+    transitions: newTransitions,
     table,
   };
 }

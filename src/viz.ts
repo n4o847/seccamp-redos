@@ -25,11 +25,13 @@ export function toDOT(
         return true;
       case 'UnorderedNFA':
         return false;
+      case 'DFA':
+        return false;
+      case 'PrunedNFA':
+        return true;
       case 'StronglyConnectedComponentGraph':
         return false;
       case 'DirectProductGraph':
-        return false;
-      case 'DFA':
         return false;
     }
   })();
@@ -86,7 +88,7 @@ export function toDOT(
         out += `    ${JSON.stringify(q)} [shape = ${shape}];\n`;
       }
       const initialStateList =
-        automaton.type === 'UnorderedNFA'
+        automaton.type === 'UnorderedNFA' || automaton.type === 'PrunedNFA'
           ? Array.from(automaton.initialStateSet)
           : [automaton.initialState];
       for (let i = 0; i < initialStateList.length; i++) {

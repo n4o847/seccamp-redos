@@ -9,6 +9,23 @@ export class TransitionMap {
     return this.map.get(source)?.get(char) ?? [];
   }
 
+  getTransitions(source: State): Map<Char, State[]> {
+    let fromSource = this.map.get(source);
+    if (fromSource === undefined) {
+      fromSource = new Map();
+      this.map.set(source, fromSource);
+    }
+    return fromSource;
+  }
+
+  *keys(): IterableIterator<[State, Char]> {
+    for (const source of this.map.keys()) {
+      for (const char of this.getTransitions(source).keys()) {
+        yield [source, char];
+      }
+    }
+  }
+
   add(source: State, char: Char, destination: State): void {
     let fromSource = this.map.get(source);
     if (fromSource === undefined) {

@@ -30,7 +30,7 @@ export function buildTripleDirectProductGraph(
 class TripleDirectProductBuilder {
   private newStateList: State[] = [];
   private newTransitions = new TransitionMap();
-  private newStateToOldStateSet: Map<State, [State, State, State]> = new Map();
+  private table: Map<State, [State, State, State]> = new Map();
 
   constructor(
     private sccGraph1: StronglyConnectedComponentGraph,
@@ -73,24 +73,20 @@ class TripleDirectProductBuilder {
       stateList: this.newStateList,
       alphabet: this.nfa.alphabet,
       transitions: this.newTransitions,
+      table: this.table,
     };
   }
 
-  // 直積は前の状態をスペース区切りに
-  createState(leftState: State, centerState: State, rightState: State): State {
-    for (const [ns, os] of this.newStateToOldStateSet) {
-      if (
-        os[0] === leftState &&
-        os[1] === centerState &&
-        os[2] === rightState
-      ) {
-        return ns;
-      }
+  private createState(
+    leftState: State,
+    centerState: State,
+    rightState: State,
+  ): State {
+    const newState = State.fromTriple([leftState, centerState, rightState]);
+    if (!this.newStateList.includes(newState)) {
+      this.newStateList.push(newState);
+      this.table.set(newState, [leftState, centerState, rightState]);
     }
-
-    const state = `${leftState}_${centerState}_${rightState}` as State;
-    this.newStateList.push(state);
-    this.newStateToOldStateSet.set(state, [leftState, centerState, rightState]);
-    return state;
+    return newState;
   }
 }

@@ -12,12 +12,14 @@ export type Automaton =
   | NonEpsilonNFA
   | UnorderedNFA
   | DFA
+  | PrunedNFA
   | StronglyConnectedComponentGraph
   | DirectProductGraph
   | TripleDirectProductGraph;
 
 export type SCCPossibleAutomaton =
   | NonEpsilonNFA
+  | PrunedNFA
   | DirectProductGraph
   | TripleDirectProductGraph;
 
@@ -39,27 +41,6 @@ export type NonEpsilonNFA = {
   transitions: TransitionMap;
 };
 
-export type StronglyConnectedComponentGraph = {
-  type: 'StronglyConnectedComponentGraph';
-  stateList: State[];
-  alphabet: Set<Char>;
-  transitions: TransitionMap;
-};
-
-export type DirectProductGraph = {
-  type: 'DirectProductGraph';
-  alphabet: Set<Char>;
-  stateList: State[];
-  transitions: TransitionMap;
-};
-
-export type TripleDirectProductGraph = {
-  type: 'TripleDirectProductGraph';
-  stateList: State[];
-  alphabet: Set<Char>;
-  transitions: TransitionMap;
-};
-
 export type UnorderedNFA = {
   type: 'UnorderedNFA';
   stateList: State[];
@@ -77,6 +58,39 @@ export type DFA = {
   acceptingStateSet: Set<State>;
   transitions: TransitionMap;
   table: Map<State, Set<State>>;
+};
+
+export type PrunedNFA = {
+  type: 'PrunedNFA';
+  stateList: State[];
+  alphabet: Set<Char>;
+  initialStateSet: Set<State>;
+  acceptingStateSet: Set<State>;
+  transitions: TransitionMap;
+  table: Map<State, [State, State]>;
+};
+
+export type StronglyConnectedComponentGraph = {
+  type: 'StronglyConnectedComponentGraph';
+  stateList: State[];
+  alphabet: Set<Char>;
+  transitions: TransitionMap;
+};
+
+export type DirectProductGraph = {
+  type: 'DirectProductGraph';
+  stateList: State[];
+  alphabet: Set<Char>;
+  transitions: TransitionMap;
+  table: Map<State, [State, State]>;
+};
+
+export type TripleDirectProductGraph = {
+  type: 'TripleDirectProductGraph';
+  stateList: State[];
+  alphabet: Set<Char>;
+  transitions: TransitionMap;
+  table: Map<State, [State, State, State]>;
 };
 
 export type Atom = RerejsChar | RerejsEscapeClass | RerejsClass | RerejsDot;
