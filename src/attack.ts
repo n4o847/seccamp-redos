@@ -132,10 +132,10 @@ export class Attacker {
 }
 
 /**
- * NFA 上である状態からある状態までの経路 (Char の配列) を幅優先探索する。
+ * オートマトン上である状態からある状態までの経路 (Char の配列) を幅優先探索する。
  */
 function findPath(
-  pnfa: PrunedNFA | DFA,
+  automaton: PrunedNFA | DFA,
   source: State | Set<State>,
   destination: State,
 ): Char[] {
@@ -144,17 +144,17 @@ function findPath(
 
   const queue: State[] = [];
 
-  const initialStateSet = new Set(source instanceof Set ? source : [source]);
+  const sourceSet = new Set(source instanceof Set ? source : [source]);
 
-  queue.push(...initialStateSet);
+  queue.push(...sourceSet);
 
   while (queue.length !== 0) {
     const q = queue.shift()!;
     if (q === destination) {
       break;
     }
-    for (const char of pnfa.alphabet) {
-      for (const d of pnfa.transitions.get(q, char)) {
+    for (const char of automaton.alphabet) {
+      for (const d of automaton.transitions.get(q, char)) {
         if (referrer.has(d)) {
           continue;
         }
@@ -166,7 +166,7 @@ function findPath(
 
   const path: Char[] = [];
 
-  for (let q = destination; !initialStateSet.has(q); ) {
+  for (let q = destination; !sourceSet.has(q); ) {
     const [prevState, char] = referrer.get(q)!;
     path.push(char);
     q = prevState;
