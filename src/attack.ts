@@ -1,6 +1,5 @@
 import { State } from './state';
 import { Char, DFA, PrunedNFA, StronglyConnectedComponentGraph } from './types';
-import { intersect } from './util';
 
 export class Attacker {
   private pnfa: PrunedNFA;
