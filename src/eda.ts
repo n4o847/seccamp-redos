@@ -1,5 +1,5 @@
 import { buildStronglyConnectedComponents } from './scc';
-import { PrunedNFA, DirectProductGraph, Message } from './types';
+import { PrunedNFA, DFA, DirectProductGraph, Message } from './types';
 import { Attacker } from './attack';
 
 /**
@@ -7,9 +7,10 @@ import { Attacker } from './attack';
  */
 export function showMessageEDA(
   pnfa: PrunedNFA,
+  dfa: DFA,
   dps: DirectProductGraph[],
 ): Message {
-  const attacker = new Attacker(pnfa);
+  const attacker = new Attacker(pnfa, dfa);
 
   for (const dp of dps) {
     const sccs = buildStronglyConnectedComponents(dp);

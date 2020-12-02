@@ -1,13 +1,15 @@
 import { State } from './state';
-import { Char, PrunedNFA, StronglyConnectedComponentGraph } from './types';
+import { Char, DFA, PrunedNFA, StronglyConnectedComponentGraph } from './types';
 import { intersect } from './util';
 
 export class Attacker {
   private pnfa: PrunedNFA;
+  private dfa: DFA;
   private nullChar: string;
 
-  constructor(pnfa: PrunedNFA) {
+  constructor(pnfa: PrunedNFA, dfa: DFA) {
     this.pnfa = pnfa;
+    this.dfa = dfa;
     this.nullChar = this.getCharForNull();
   }
 
@@ -119,8 +121,13 @@ export class Attacker {
    * EDA/IDA 構造からバックトラックの起こるような状態へ遷移する⽂字列を探す。
    */
   private getSuffix(source: State): string {
-    return findUnacceptablePath(this.pnfa, source)
+    return findPath(
+      this.dfa,
+      this.dfa.initialState,
+      this.pnfa.table.get(source)![1],
+    )
       .map((char) => char ?? this.nullChar)
+      .reverse()
       .join('');
   }
 }
@@ -129,7 +136,7 @@ export class Attacker {
  * NFA 上である状態からある状態までの経路 (Char の配列) を幅優先探索する。
  */
 function findPath(
-  pnfa: PrunedNFA,
+  pnfa: PrunedNFA | DFA,
   source: State | Set<State>,
   destination: State,
 ): Char[] {

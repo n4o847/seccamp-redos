@@ -20,12 +20,12 @@ export function detectReDoS(src: string, flags?: string): Message {
     const pnfa = prune(nfa, dfa);
     const sccs = buildStronglyConnectedComponents(pnfa);
     const dps = buildDirectProductGraphs(sccs);
-    const messageEDA = showMessageEDA(pnfa, dps);
+    const messageEDA = showMessageEDA(pnfa, dfa, dps);
     if (messageEDA.status === 'Vulnerable') {
       return messageEDA;
     }
     const tdps = buildTripleDirectProductGraphs(sccs, pnfa);
-    const messageIDA = showMessageIDA(pnfa, tdps);
+    const messageIDA = showMessageIDA(pnfa, dfa, tdps);
     if (messageIDA.status === 'Vulnerable') {
       return messageIDA;
     }

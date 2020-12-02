@@ -52,9 +52,9 @@ function main(): void {
     console.log(toDOT(pnfa));
     const sccs = buildStronglyConnectedComponents(pnfa);
     const dps = buildDirectProductGraphs(sccs);
-    console.log(`//`, src, `has EDA?: `, showMessageEDA(pnfa, dps));
+    console.log(`//`, src, `has EDA?: `, showMessageEDA(pnfa, dfa, dps));
     const tdps = buildTripleDirectProductGraphs(sccs, pnfa);
-    console.log(`//`, src, `has IDA?: `, showMessageIDA(pnfa, tdps));
+    console.log(`//`, src, `has IDA?: `, showMessageIDA(pnfa, dfa, tdps));
   }
 }
 
