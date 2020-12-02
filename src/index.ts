@@ -6,14 +6,12 @@ import { showMessageIDA } from './ida';
 import { buildEpsilonNFA, eliminateEpsilonTransitions } from './lib';
 import { buildStronglyConnectedComponents } from './scc';
 import { Message } from './types';
-import { addSubMatchTransitions } from './subMatch';
 
 export function detectReDoS(src: string, flags?: string): Message {
   try {
     const pat = new Parser(src, flags).parse();
     const enfa = buildEpsilonNFA(pat);
-    const enfa_s = addSubMatchTransitions(pat, enfa);
-    const nfa = eliminateEpsilonTransitions(enfa_s);
+    const nfa = eliminateEpsilonTransitions(enfa);
     const sccs = buildStronglyConnectedComponents(nfa);
     const dps = buildDirectProductGraphs(sccs);
     const messageEDA = showMessageEDA(dps);

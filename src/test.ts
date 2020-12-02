@@ -9,39 +9,42 @@ import { showMessageEDA } from './eda';
 import { buildTripleDirectProductGraphs } from './tripleDirectProduct';
 import { showMessageIDA } from './ida';
 import { prune } from './pruning';
-import { addSubMatchTransitions } from './subMatch';
 
 function main(): void {
   const sources: [source: string, flags?: string][] = [
-    //[String.raw`a`],
-    //[String.raw`.`],
-    //[String.raw`\s`],
-    //[String.raw`a|b`],
-    //[String.raw`ab`],
-    //[String.raw`^ab$`],
-    //[String.raw`a*`],
-    //[String.raw`a*?`],
-    //[String.raw`(?:)`],
-    //[String.raw`(?:a|bc)`],
-    //[String.raw`(a|b)*`],
-    //[String.raw`^(a|b)*$`],
-    //[String.raw`^(a|b)*`],
-    [String.raw`(a|b)*$`], // false negatuve IDA
-    [String.raw`(a*)*`], //　false positive EDA
-    // [String.raw`^(a*)*$`], // EDA
-    [String.raw`(a+)+`], // false positive (EDA & IDA)
-    // [String.raw`^(a+)+$`], // EDA OK
-    // [String.raw`(a?)?`], // OK
-    // [String.raw`(\w|\d)*`],
-    // [String.raw`[a-z][0-9a-z]*`],
-    // [String.raw`a[a-z]`, 'i'],
-    // [String.raw`a*a*`], OK
-    // [String.raw`^a*a*$`], // IDA1 OK
-    //[String.raw`(.*)="(.*)"`], //IDA2 OK
-    // [String.raw`^(.*)="(.*)"$`], //IDA2 OK
-    // [String.raw`(.*|(a|a)*)`], // 枝切り1
-    // [String.raw`(a|a)*?.*`], // 枝切り2
-    //[String.raw`^a|b$|aa`], // OK
+    [String.raw`a`],
+    [String.raw`.`],
+    [String.raw`\s`],
+    [String.raw`a|b`],
+    [String.raw`ab`],
+    [String.raw`^ab$`],
+    [String.raw`a*`],
+    [String.raw`a*?`],
+    [String.raw`(?:)`],
+    [String.raw`(?:a|bc)`],
+    [String.raw`(a|b)*`],
+    [String.raw`^(a|b)*`],
+    [String.raw`(a|b)*$`], //IDA
+    [String.raw`^(a|b)*$`],
+    [String.raw`(a*)*`], //
+    [String.raw`^(a*)*`], //
+    [String.raw`(a*)*$`], // EDA IDA
+    [String.raw`^(a*)*$`], // EDA
+    [String.raw`(a+)+`],
+    [String.raw`^(a+)+$`], // EDA
+    [String.raw`(a?)?`],
+    [String.raw`(\w|\d)*`],
+    [String.raw`^(\w|\d)*$`], // EDA
+    [String.raw`[a-z][0-9a-z]*`],
+    [String.raw`^[a-z][0-9a-z]*$`],
+    [String.raw`a[a-z]`, 'i'],
+    [String.raw`a*a*`],
+    [String.raw`^a*a*$`], // IDA1
+    [String.raw`(.*)="(.*)"`], // IDA2
+    [String.raw`^(.*)="(.*)"$`], // IDA2
+    [String.raw`(.*|(a|a)*)`], // 枝切り1
+    [String.raw`(a|a)*?.*`], // 枝切り2
+    [String.raw`^a|b$|aa`],
   ];
 
   for (const [src, flags] of sources) {
@@ -49,10 +52,8 @@ function main(): void {
     const pat = new Parser(src, flags).parse();
     const enfa = buildEpsilonNFA(pat);
     console.log(toDOT(enfa));
-    const enfa_s = addSubMatchTransitions(pat, enfa);
-    console.log(toDOT(enfa_s));
     console.log(`//`, src, `eliminated`);
-    const nfa = eliminateEpsilonTransitions(enfa_s);
+    const nfa = eliminateEpsilonTransitions(enfa);
     console.log(toDOT(nfa));
     console.log(`//`, src, `reversed`);
     const rnfa = reverseNFA(nfa);
