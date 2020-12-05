@@ -217,7 +217,9 @@ class EpsilonNFABuilder {
         const patChild: Node = pattern.children[index];
         if (
           (patChild.type === 'Sequence' &&
+            patChild.children.length > 0 &&
             patChild.children[0].type !== 'LineBegin') ||
+          (patChild.type === 'Sequence' && patChild.children.length === 0) || 
           (patChild.type !== 'Sequence' && patChild.type !== 'LineBegin')
         ) {
           // 元の遷移を削除
@@ -246,8 +248,10 @@ class EpsilonNFABuilder {
         const patChild: Node = pattern.children[index];
         if (
           (patChild.type === 'Sequence' &&
+            patChild.children.length > 0 &&
             patChild.children[patChild.children.length - 1].type !==
-              'LineEnd') ||
+            'LineEnd') ||
+          (patChild.type === 'Sequence' && patChild.children.length === 0) || 
           (patChild.type !== 'Sequence' && patChild.type !== 'LineEnd')
         ) {
           // 遷移を削除
@@ -272,7 +276,9 @@ class EpsilonNFABuilder {
       // 始端submatch (非貪欲)
       if (
         pattern.type !== 'Sequence' ||
-        pattern.children[0].type !== 'LineBegin'
+        pattern.children.length === 0 ||
+        (pattern.children.length > 0 &&
+          pattern.children[0].type !== 'LineBegin')
       ) {
         // 初期状態を変えて、遷移を付け足す
         const q0 = this.createState();
@@ -292,7 +298,9 @@ class EpsilonNFABuilder {
       // 終端submatch (貪欲)
       if (
         pattern.type !== 'Sequence' ||
-        pattern.children[pattern.children.length - 1].type !== 'LineEnd'
+        pattern.children.length === 0 ||
+        (pattern.children.length > 0 &&
+          pattern.children[pattern.children.length - 1].type !== 'LineEnd')
       ) {
         const q0 = this.createState();
         const f0 = this.createState();
