@@ -219,7 +219,7 @@ class EpsilonNFABuilder {
           (patChild.type === 'Sequence' &&
             patChild.children.length > 0 &&
             patChild.children[0].type !== 'LineBegin') ||
-          (patChild.type === 'Sequence' && patChild.children.length === 0) || 
+          (patChild.type === 'Sequence' && patChild.children.length === 0) ||
           (patChild.type !== 'Sequence' && patChild.type !== 'LineBegin')
         ) {
           // 元の遷移を削除
@@ -250,8 +250,8 @@ class EpsilonNFABuilder {
           (patChild.type === 'Sequence' &&
             patChild.children.length > 0 &&
             patChild.children[patChild.children.length - 1].type !==
-            'LineEnd') ||
-          (patChild.type === 'Sequence' && patChild.children.length === 0) || 
+              'LineEnd') ||
+          (patChild.type === 'Sequence' && patChild.children.length === 0) ||
           (patChild.type !== 'Sequence' && patChild.type !== 'LineEnd')
         ) {
           // 遷移を削除
