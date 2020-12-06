@@ -29,6 +29,7 @@ class EpsilonNFABuilder {
     // submatch用の処理
     if (
       this.pattern.child.type === 'Capture' ||
+      this.pattern.child.type === 'NamedCapture' ||
       this.pattern.child.type === 'Group'
     ) {
       [initialState, acceptingState] = this.buildSubMatch(
@@ -110,6 +111,15 @@ class EpsilonNFABuilder {
             acceptingState: f0,
           };
         } else {
+          // ^または$が有効的な場所にない場合、エラーを返す
+          node.children.forEach((child, index) => {
+            if (index > 0 && child.type === 'LineBegin') {
+              throw new Error('Illigal use LineBegin');
+            }
+            if (index < node.children.length - 1 && child.type === 'LineEnd') {
+              throw new Error('Illigal use LineEnd');
+            }
+          });
           const childNFAs = node.children
             .filter(
               (child) => child.type !== 'LineBegin' && child.type !== 'LineEnd',
