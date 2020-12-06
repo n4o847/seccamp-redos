@@ -1,25 +1,23 @@
 import { buildStronglyConnectedComponents } from './scc';
-import { State } from './state';
-import { TripleDirectProductGraph, Message } from './types';
+import { PrunedNFA, DFA, TripleDirectProductGraph, Message } from './types';
+import { Attacker } from './attack';
 
-export function showMessageIDA(tdps: TripleDirectProductGraph[]): Message {
-  if (tdps.some((tdp) => isIDA(tdp))) {
-    return { status: 'Vulnerable', message: 'Detected IDA.' };
-  } else {
-    return { status: 'Safe', message: "Don't have IDA." };
-  }
-}
+export function showMessageIDA(
+  pnfa: PrunedNFA,
+  dfa: DFA,
+  tdps: TripleDirectProductGraph[],
+): Message {
+  const attacker = new Attacker(pnfa, dfa);
 
-function isIDA(tdp: TripleDirectProductGraph): boolean {
-  const sccs = buildStronglyConnectedComponents(tdp);
-  return sccs.some((scc) => {
-    // (lq, lq, rq) と (lq, rq, rq) が存在するか
-    for (const [lq, cq, rq] of scc.stateList.map((s) => tdp.table.get(s)!)) {
-      const state = State.fromTriple([lq, rq, rq]);
-      if (lq === cq && scc.stateList.includes(state)) {
-        return true;
+  for (const tdp of tdps) {
+    const sccs = buildStronglyConnectedComponents(tdp);
+    for (const scc of sccs) {
+      const attack = attacker.findPolynomialAttack(scc, tdp.table);
+      if (attack !== null) {
+        return { status: 'Vulnerable', message: 'Detected IDA.', attack };
       }
     }
-    return false;
-  });
+  }
+
+  return { status: 'Safe', message: "Don't have IDA." };
 }

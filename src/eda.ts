@@ -1,39 +1,26 @@
 import { buildStronglyConnectedComponents } from './scc';
-import { DirectProductGraph, Message } from './types';
+import { PrunedNFA, DFA, DirectProductGraph, Message } from './types';
+import { Attacker } from './attack';
 
 /**
  * 強連結成分を一つ一つ見ていき、EDAを持つかメッセージを返す
  */
-export function showMessageEDA(dps: DirectProductGraph[]): Message {
-  // 別の経路で同じ文字で移動して自身に戻れたらEDA
-  if (dps.some((dp) => isEDA(dp))) {
-    return { status: 'Vulnerable', message: 'Detected EDA.' };
-  } else {
-    return { status: 'Safe', message: "Don't have EDA." };
-  }
-}
+export function showMessageEDA(
+  pnfa: PrunedNFA,
+  dfa: DFA,
+  dps: DirectProductGraph[],
+): Message {
+  const attacker = new Attacker(pnfa, dfa);
 
-function isEDA(dp: DirectProductGraph): boolean {
-  const sccs = buildStronglyConnectedComponents(dp);
-  return sccs.some((scc) => {
-    // 遷移元と遷移先が同じ遷移が複数存在するかを検出
-    for (const source of scc.stateList) {
-      for (const char of scc.alphabet) {
-        const destinationArray = scc.transitions
-          .get(source, char)
-          .filter((d) => d === source);
-
-        if (destinationArray.length >= 2) {
-          return true;
-        }
+  for (const dp of dps) {
+    const sccs = buildStronglyConnectedComponents(dp);
+    for (const scc of sccs) {
+      const attack = attacker.findExponentialAttack(scc, dp.table);
+      if (attack !== null) {
+        return { status: 'Vulnerable', message: 'Detected EDA.', attack };
       }
     }
+  }
 
-    const lrSame = scc.stateList.filter((state) => {
-      const [lq, rq] = dp.table.get(state)!;
-      return lq === rq;
-    });
-    // (n, n), (m, k) (m !== k)が存在(すべて同じじゃないが全て異なるわけではない)
-    return lrSame.length < scc.stateList.length && lrSame.length > 0;
-  });
+  return { status: 'Safe', message: "Don't have EDA." };
 }

@@ -2,13 +2,13 @@ import { Parser } from 'rerejs';
 import { buildEpsilonNFA } from './enfa';
 import { eliminateEpsilonTransitions } from './nfa';
 import { reverseNFA, determinize } from './dfa';
-import { toDOT } from './viz';
-import { buildDirectProductGraphs } from './directProduct';
+import { prune } from './pruning';
 import { buildStronglyConnectedComponents } from './scc';
+import { buildDirectProductGraphs } from './directProduct';
 import { showMessageEDA } from './eda';
 import { buildTripleDirectProductGraphs } from './tripleDirectProduct';
 import { showMessageIDA } from './ida';
-import { prune } from './pruning';
+import { toDOT } from './viz';
 
 function main(): void {
   const sources: [source: string, flags?: string][] = [
@@ -48,13 +48,13 @@ function main(): void {
     const dfa = determinize(rnfa);
     console.log(toDOT(dfa));
     console.log(`//`, src, `pruned`);
-    const lcnfa = prune(nfa, dfa);
-    console.log(toDOT(lcnfa));
-    const sccs = buildStronglyConnectedComponents(lcnfa);
+    const pnfa = prune(nfa, dfa);
+    console.log(toDOT(pnfa));
+    const sccs = buildStronglyConnectedComponents(pnfa);
     const dps = buildDirectProductGraphs(sccs);
-    console.log(`//`, src, `has EDA?: `, showMessageEDA(dps));
-    const tdps = buildTripleDirectProductGraphs(sccs, lcnfa);
-    console.log(`//`, src, `has IDA?: `, showMessageIDA(tdps));
+    console.log(`//`, src, `has EDA?: `, showMessageEDA(pnfa, dfa, dps));
+    const tdps = buildTripleDirectProductGraphs(sccs, pnfa);
+    console.log(`//`, src, `has IDA?: `, showMessageIDA(pnfa, dfa, tdps));
   }
 }
 

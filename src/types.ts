@@ -18,7 +18,6 @@ export type Automaton =
   | TripleDirectProductGraph;
 
 export type SCCPossibleAutomaton =
-  | NonEpsilonNFA
   | PrunedNFA
   | DirectProductGraph
   | TripleDirectProductGraph;
@@ -117,7 +116,17 @@ export type NullableTransition =
       destination: State;
     };
 
-export type Message = {
-  status: 'Safe' | 'Vulnerable' | 'Error';
-  message: string;
-};
+export type Message =
+  | {
+      status: 'Safe';
+      message: string;
+    }
+  | {
+      status: 'Vulnerable';
+      message: string;
+      attack: string;
+    }
+  | {
+      status: 'Error';
+      message: string;
+    };
