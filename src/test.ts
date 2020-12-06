@@ -45,6 +45,7 @@ function main(): void {
     [String.raw`(.*|(a|a)*)`], // 枝切り1
     [String.raw`(a|a)*?.*`], // 枝切り2
     [String.raw`^a|b$|aa`],
+    [String.raw`^$`], // 空文字に一致
   ];
 
   for (const [src, flags] of sources) {

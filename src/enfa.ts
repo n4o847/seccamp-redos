@@ -102,7 +102,22 @@ class EpsilonNFABuilder {
         };
       }
       case 'Sequence': {
-        if (node.children.length === 0) {
+        // ^または$が有効的な場所にない場合、エラーを返す
+        node.children.forEach((child, index) => {
+          if (index > 0 && child.type === 'LineBegin') {
+            throw new Error('Illigal use LineBegin');
+          }
+          if (index < node.children.length - 1 && child.type === 'LineEnd') {
+            throw new Error('Illigal use LineEnd');
+          }
+        });
+        const childNFAs = node.children
+          .filter(
+            (child) => child.type !== 'LineBegin' && child.type !== 'LineEnd',
+          )
+          .map((child) => this.buildChild(child));
+
+        if (childNFAs.length === 0) {
           const q0 = this.createState();
           const f0 = this.createState();
           this.addTransition(q0, null, f0);
@@ -111,20 +126,6 @@ class EpsilonNFABuilder {
             acceptingState: f0,
           };
         } else {
-          // ^または$が有効的な場所にない場合、エラーを返す
-          node.children.forEach((child, index) => {
-            if (index > 0 && child.type === 'LineBegin') {
-              throw new Error('Illigal use LineBegin');
-            }
-            if (index < node.children.length - 1 && child.type === 'LineEnd') {
-              throw new Error('Illigal use LineEnd');
-            }
-          });
-          const childNFAs = node.children
-            .filter(
-              (child) => child.type !== 'LineBegin' && child.type !== 'LineEnd',
-            )
-            .map((child) => this.buildChild(child));
           for (let i = 0; i < childNFAs.length - 1; i++) {
             const f1 = childNFAs[i].acceptingState;
             const q2 = childNFAs[i + 1].initialState;
