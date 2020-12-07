@@ -24,9 +24,27 @@ class EpsilonNFABuilder {
   constructor(private pattern: Pattern) {}
 
   build(): EpsilonNFA {
-    const { initialState, acceptingState } = this.buildChild(
-      this.pattern.child,
-    );
+    let { initialState, acceptingState } = this.buildChild(this.pattern.child);
+
+    // submatch用の処理
+    if (
+      this.pattern.child.type === 'Capture' ||
+      this.pattern.child.type === 'NamedCapture' ||
+      this.pattern.child.type === 'Group'
+    ) {
+      [initialState, acceptingState] = this.buildSubMatch(
+        this.pattern.child.child,
+        initialState,
+        acceptingState,
+      );
+    } else {
+      [initialState, acceptingState] = this.buildSubMatch(
+        this.pattern.child,
+        initialState,
+        acceptingState,
+      );
+    }
+
     const transitions = new Map<State, NullableTransition[]>(
       this.stateList.map((q) => [q, []]),
     );
@@ -65,7 +83,11 @@ class EpsilonNFABuilder {
     switch (node.type) {
       case 'Disjunction': {
         const q0 = this.createState();
-        const childNFAs = node.children.map((child) => this.buildChild(child));
+        const childNFAs = node.children
+          .filter(
+            (child) => child.type !== 'LineBegin' && child.type !== 'LineEnd',
+          )
+          .map((child) => this.buildChild(child));
         const f0 = this.createState();
         for (const childNFA of childNFAs) {
           const q1 = childNFA.initialState;
@@ -73,13 +95,29 @@ class EpsilonNFABuilder {
           this.addTransition(q0, null, q1);
           this.addTransition(f1, null, f0);
         }
+
         return {
           initialState: q0,
           acceptingState: f0,
         };
       }
       case 'Sequence': {
-        if (node.children.length === 0) {
+        // ^または$が有効的な場所にない場合、エラーを返す
+        node.children.forEach((child, index) => {
+          if (index > 0 && child.type === 'LineBegin') {
+            throw new Error('Illigal use LineBegin');
+          }
+          if (index < node.children.length - 1 && child.type === 'LineEnd') {
+            throw new Error('Illigal use LineEnd');
+          }
+        });
+        const childNFAs = node.children
+          .filter(
+            (child) => child.type !== 'LineBegin' && child.type !== 'LineEnd',
+          )
+          .map((child) => this.buildChild(child));
+
+        if (childNFAs.length === 0) {
           const q0 = this.createState();
           const f0 = this.createState();
           this.addTransition(q0, null, f0);
@@ -88,9 +126,6 @@ class EpsilonNFABuilder {
             acceptingState: f0,
           };
         } else {
-          const childNFAs = node.children.map((child) =>
-            this.buildChild(child),
-          );
           for (let i = 0; i < childNFAs.length - 1; i++) {
             const f1 = childNFAs[i].acceptingState;
             const q2 = childNFAs[i + 1].initialState;
@@ -98,6 +133,7 @@ class EpsilonNFABuilder {
           }
           const q0 = childNFAs[0].initialState;
           const f0 = childNFAs[childNFAs.length - 1].acceptingState;
+
           return {
             initialState: q0,
             acceptingState: f0,
@@ -138,6 +174,7 @@ class EpsilonNFABuilder {
           }
           this.addTransition(f1, null, f0);
         }
+
         return {
           initialState: q0,
           acceptingState: f0,
@@ -145,8 +182,6 @@ class EpsilonNFABuilder {
       }
       case 'Repeat':
       case 'WordBoundary':
-      case 'LineBegin':
-      case 'LineEnd':
       case 'LookAhead':
       case 'LookBehind': {
         throw new Error('unimplemented');
@@ -168,7 +203,136 @@ class EpsilonNFABuilder {
       case 'NamedBackRef': {
         throw new Error('unimplemented');
       }
+      case 'LineBegin':
+      case 'LineEnd': {
+        const q0 = this.throughState();
+        return {
+          initialState: q0,
+          acceptingState: q0,
+        };
+      }
     }
+  }
+
+  private buildSubMatch(
+    pattern: Node,
+    initialState: State,
+    acceptingState: State,
+  ): [initialState: State, acceptingState: State] {
+    if (pattern.type === 'Disjunction') {
+      // 始端submatch (非貪欲)
+      const oldInitialTransitions = this.transitions.filter(
+        (t) => t[0] === initialState,
+      );
+      oldInitialTransitions.forEach(([source, node, dest], index) => {
+        const patChild: Node = pattern.children[index];
+        if (
+          (patChild.type === 'Sequence' &&
+            patChild.children.length > 0 &&
+            patChild.children[0].type !== 'LineBegin') ||
+          (patChild.type === 'Sequence' && patChild.children.length === 0) ||
+          (patChild.type !== 'Sequence' && patChild.type !== 'LineBegin')
+        ) {
+          // 元の遷移を削除
+          this.transitions = this.transitions.filter(
+            ([s, n, d]) => !(s === source && n === node && d === dest),
+          );
+          // 遷移を追加
+          const q0 = this.createState();
+          const f0 = this.createState();
+          const q1 = this.createState();
+          const f1 = this.createState();
+          this.addTransition(initialState, null, q0);
+          this.addTransition(q0, null, f0); // 非貪欲
+          this.addTransition(f0, null, dest);
+          this.addTransition(q0, null, q1);
+          this.addTransition(f1, null, f0);
+          this.addDotTransition(q1, f1);
+          this.addTransition(f1, null, q1);
+        }
+      });
+      // 終端submatch (貪欲)
+      const oldFinalTransitions = this.transitions.filter(
+        (t) => t[2] === acceptingState,
+      );
+      oldFinalTransitions.forEach(([source, node, dest], index) => {
+        const patChild: Node = pattern.children[index];
+        if (
+          (patChild.type === 'Sequence' &&
+            patChild.children.length > 0 &&
+            patChild.children[patChild.children.length - 1].type !==
+              'LineEnd') ||
+          (patChild.type === 'Sequence' && patChild.children.length === 0) ||
+          (patChild.type !== 'Sequence' && patChild.type !== 'LineEnd')
+        ) {
+          // 遷移を削除
+          this.transitions = this.transitions.filter(
+            ([s, n, d]) => !(s === source && n === node && d === dest),
+          );
+          // 遷移を追加
+          const q0 = this.createState();
+          const f0 = this.createState();
+          const q1 = this.createState();
+          const f1 = this.createState();
+          this.addTransition(q0, null, q1); // 貪欲
+          this.addDotTransition(q1, f1);
+          this.addTransition(f1, null, q1);
+          this.addTransition(f1, null, f0);
+          this.addTransition(source, null, q0);
+          this.addTransition(q0, null, f0);
+          this.addTransition(f0, null, acceptingState);
+        }
+      });
+    } else {
+      // 始端submatch (非貪欲)
+      if (
+        pattern.type !== 'Sequence' ||
+        pattern.children.length === 0 ||
+        (pattern.children.length > 0 &&
+          pattern.children[0].type !== 'LineBegin')
+      ) {
+        // 初期状態を変えて、遷移を付け足す
+        const q0 = this.createState();
+        const f0 = this.createState();
+        const q1 = this.createState();
+        const f1 = this.createState();
+        this.addTransition(q0, null, f0); // 非貪欲
+        this.addTransition(f0, null, initialState);
+        this.addTransition(q0, null, q1);
+        this.addTransition(f1, null, f0);
+        this.addDotTransition(q1, f1);
+        this.addTransition(f1, null, q1);
+
+        initialState = q0;
+      }
+
+      // 終端submatch (貪欲)
+      if (
+        pattern.type !== 'Sequence' ||
+        pattern.children.length === 0 ||
+        (pattern.children.length > 0 &&
+          pattern.children[pattern.children.length - 1].type !== 'LineEnd')
+      ) {
+        const q0 = this.createState();
+        const f0 = this.createState();
+        const q1 = this.createState();
+        const f1 = this.createState();
+        this.addTransition(q0, null, q1); // 貪欲
+        this.addDotTransition(q1, f1);
+        this.addTransition(f1, null, q1);
+        this.addTransition(f1, null, f0);
+        this.addTransition(acceptingState, null, q0);
+        this.addTransition(q0, null, f0);
+
+        acceptingState = f0;
+      }
+    }
+    return [initialState, acceptingState];
+  }
+
+  private throughState(): State {
+    const state = `q${this.stateId}` as State;
+    return state;
   }
 
   private createState(): State {
@@ -192,5 +356,15 @@ class EpsilonNFABuilder {
     destination: State,
   ): void {
     this.transitions.push([source, node, destination]);
+  }
+
+  private addDotTransition(source: State, destination: State): void {
+    // 適当なDotのnode
+    const node: Node = {
+      type: 'Dot',
+      range: [0, 0],
+    };
+    this.extendAlphabet(node);
+    this.addTransition(source, node, destination);
   }
 }
