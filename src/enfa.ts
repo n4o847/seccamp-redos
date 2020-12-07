@@ -235,7 +235,7 @@ class EpsilonNFABuilder {
         ) {
           // 元の遷移を削除
           this.transitions = this.transitions.filter(
-            ([s, n, d]) => s !== source || n !== node || d !== dest,
+            ([s, n, d]) => !(s === source && n === node && d === dest),
           );
           // 遷移を追加
           const q0 = this.createState();
@@ -267,7 +267,7 @@ class EpsilonNFABuilder {
         ) {
           // 遷移を削除
           this.transitions = this.transitions.filter(
-            ([s, n, d]) => s !== source || n !== node || d !== dest,
+            ([s, n, d]) => !(s === source && n === node && d === dest),
           );
           // 遷移を追加
           const q0 = this.createState();
