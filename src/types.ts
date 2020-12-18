@@ -130,3 +130,10 @@ export type Message =
       status: 'Error';
       message: string;
     };
+
+export type ErrorType = { type: 'Error'; error: Error };
+
+export type BuildChildResult = { type: 'BuildChildResult' } & Pick<
+  EpsilonNFA,
+  'initialState' | 'acceptingState'
+>;
