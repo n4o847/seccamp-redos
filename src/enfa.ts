@@ -1,12 +1,19 @@
 import { Pattern, Node } from 'rerejs';
 import { State } from './state';
-import { EpsilonNFA, NullableTransition, Char, Atom } from './types';
+import {
+  EpsilonNFA,
+  NullableTransition,
+  Char,
+  Atom,
+  BuildChildResult,
+  ErrorType,
+} from './types';
 import { extendAlphabet, getChars } from './char';
 
 /**
  * Thompson's construction を用いて rerejs.Pattern から ε-NFA を構築する。
  */
-export function buildEpsilonNFA(pattern: Pattern): EpsilonNFA {
+export function buildEpsilonNFA(pattern: Pattern): EpsilonNFA | ErrorType {
   return new EpsilonNFABuilder(pattern).build();
 }
 
@@ -23,9 +30,14 @@ class EpsilonNFABuilder {
 
   constructor(private pattern: Pattern) {}
 
-  build(): EpsilonNFA {
-    let { initialState, acceptingState } = this.buildChild(this.pattern.child);
+  build(): EpsilonNFA | ErrorType {
+    const resultOfBuildChild = this.buildChild(this.pattern.child);
 
+    if (resultOfBuildChild.type === 'Error') {
+      return resultOfBuildChild;
+    }
+
+    let { initialState, acceptingState } = resultOfBuildChild;
     // submatch用の処理
     if (
       this.pattern.child.type === 'Capture' ||
@@ -77,17 +89,26 @@ class EpsilonNFABuilder {
    * - 初期状態 q への遷移は持たない。
    * - 受理状態 f からの遷移は持たない。
    */
-  private buildChild(
-    node: Node,
-  ): Pick<EpsilonNFA, 'initialState' | 'acceptingState'> {
+  private buildChild(node: Node): BuildChildResult | ErrorType {
     switch (node.type) {
       case 'Disjunction': {
         const q0 = this.createState();
-        const childNFAs = node.children
+        const maybeChildNFAs = node.children
           .filter(
             (child) => child.type !== 'LineBegin' && child.type !== 'LineEnd',
           )
           .map((child) => this.buildChild(child));
+
+        const childNFAs: BuildChildResult[] = [];
+
+        for (const childNFA of maybeChildNFAs) {
+          if (childNFA.type === 'BuildChildResult') {
+            childNFAs.push(childNFA);
+          } else if (childNFA.type === 'Error') {
+            return { type: 'Error', error: childNFA.error };
+          }
+        }
+
         const f0 = this.createState();
         for (const childNFA of childNFAs) {
           const q1 = childNFA.initialState;
@@ -97,31 +118,47 @@ class EpsilonNFABuilder {
         }
 
         return {
+          type: 'BuildChildResult',
           initialState: q0,
           acceptingState: f0,
         };
       }
       case 'Sequence': {
         // ^または$が有効的な場所にない場合、エラーを返す
-        node.children.forEach((child, index) => {
-          if (index > 0 && child.type === 'LineBegin') {
-            throw new Error('Illigal use LineBegin');
+        for (let i = 0; i < node.children.length; i++) {
+          if (i > 0 && node.children[i].type === 'LineBegin') {
+            return { type: 'Error', error: new Error('Illigal use LineBegin') };
           }
-          if (index < node.children.length - 1 && child.type === 'LineEnd') {
-            throw new Error('Illigal use LineEnd');
+          if (
+            i < node.children.length - 1 &&
+            node.children[i].type === 'LineEnd'
+          ) {
+            return { type: 'Error', error: new Error('Illigal use LineEnd') };
           }
-        });
-        const childNFAs = node.children
+        }
+
+        const maybeChildNFAs = node.children
           .filter(
             (child) => child.type !== 'LineBegin' && child.type !== 'LineEnd',
           )
           .map((child) => this.buildChild(child));
+
+        const childNFAs: BuildChildResult[] = [];
+
+        for (const childNFA of maybeChildNFAs) {
+          if (childNFA.type === 'BuildChildResult') {
+            childNFAs.push(childNFA);
+          } else if (childNFA.type === 'Error') {
+            return { type: 'Error', error: childNFA.error };
+          }
+        }
 
         if (childNFAs.length === 0) {
           const q0 = this.createState();
           const f0 = this.createState();
           this.addTransition(q0, null, f0);
           return {
+            type: 'BuildChildResult',
             initialState: q0,
             acceptingState: f0,
           };
@@ -135,6 +172,7 @@ class EpsilonNFABuilder {
           const f0 = childNFAs[childNFAs.length - 1].acceptingState;
 
           return {
+            type: 'BuildChildResult',
             initialState: q0,
             acceptingState: f0,
           };
@@ -152,6 +190,9 @@ class EpsilonNFABuilder {
         const optional = node.type === 'Optional';
         const q0 = this.createState();
         const childNFA = this.buildChild(node.child);
+        if (childNFA.type === 'Error') {
+          return { type: 'Error', error: childNFA.error };
+        }
         const f0 = this.createState();
         const q1 = childNFA.initialState;
         const f1 = childNFA.acceptingState;
@@ -176,6 +217,7 @@ class EpsilonNFABuilder {
         }
 
         return {
+          type: 'BuildChildResult',
           initialState: q0,
           acceptingState: f0,
         };
@@ -184,7 +226,7 @@ class EpsilonNFABuilder {
       case 'WordBoundary':
       case 'LookAhead':
       case 'LookBehind': {
-        throw new Error('unimplemented');
+        return { type: 'Error', error: new Error('Unimplemented') };
       }
       case 'Char':
       case 'EscapeClass':
@@ -195,18 +237,20 @@ class EpsilonNFABuilder {
         this.extendAlphabet(node);
         this.addTransition(q0, node, f0);
         return {
+          type: 'BuildChildResult',
           initialState: q0,
           acceptingState: f0,
         };
       }
       case 'BackRef':
       case 'NamedBackRef': {
-        throw new Error('unimplemented');
+        return { type: 'Error', error: new Error('Unimplemented') };
       }
       case 'LineBegin':
       case 'LineEnd': {
         const q0 = this.throughState();
         return {
+          type: 'BuildChildResult',
           initialState: q0,
           acceptingState: q0,
         };

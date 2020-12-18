@@ -45,6 +45,7 @@ function main(): void {
     [String.raw`(.*|(a|a)*)`], // 枝切り1
     [String.raw`(a|a)*?.*`], // 枝切り2
     [String.raw`^a|b$|aa`],
+    [String.raw`^ab^c`], // エラー回復用
     [String.raw`^$`], // 空文字に一致
   ];
 
@@ -52,6 +53,11 @@ function main(): void {
     console.log(`//`, src, flags);
     const pat = new Parser(src, flags).parse();
     const enfa = buildEpsilonNFA(pat);
+    if (enfa.type === 'Error') {
+      // detectReDosを用いる場合、Objectが返されるがここではmessageのみ
+      console.error('Error Message:', enfa.error.message);
+      continue;
+    }
     console.log(toDOT(enfa));
     console.log(`//`, src, `eliminated`);
     const nfa = eliminateEpsilonTransitions(enfa);
